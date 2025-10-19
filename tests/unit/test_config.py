@@ -14,7 +14,7 @@ def test_config_defaults():
     assert config.model == "claude-3-5-sonnet-20241022"
     assert config.max_tokens == 4096
     assert config.temperature == 0.7
-    assert config.langfuse_host == "http://localhost:3000"
+    assert config.langfuse_host == "http://localhost:3200"
 
 
 def test_config_from_env(monkeypatch):

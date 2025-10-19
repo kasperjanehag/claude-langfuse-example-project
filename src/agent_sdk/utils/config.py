@@ -21,7 +21,7 @@ class Config(BaseSettings):
     # Langfuse Configuration
     langfuse_public_key: str = Field(default="", alias="LANGFUSE_PUBLIC_KEY")
     langfuse_secret_key: str = Field(default="", alias="LANGFUSE_SECRET_KEY")
-    langfuse_host: str = Field(default="http://localhost:3000", alias="LANGFUSE_HOST")
+    langfuse_host: str = Field(default="http://localhost:3200", alias="LANGFUSE_HOST")
 
     # Application Settings
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")

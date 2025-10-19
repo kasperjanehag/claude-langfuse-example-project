@@ -50,7 +50,7 @@ docker-up: ## Start Langfuse services
 	docker compose up -d
 	@echo "Waiting for Langfuse to be ready..."
 	@sleep 5
-	@echo "Langfuse should be available at http://localhost:3000"
+	@echo "Langfuse should be available at http://localhost:3200"
 
 docker-down: ## Stop Langfuse services
 	docker compose down
@@ -70,7 +70,7 @@ interactive: ## Start interactive agent session
 setup: dev docker-up ## Complete setup: install dependencies and start Langfuse
 	@echo ""
 	@echo "Setup complete! Next steps:"
-	@echo "1. Go to http://localhost:3000 and create a Langfuse account"
+	@echo "1. Go to http://localhost:3200 and create a Langfuse account"
 	@echo "2. Create a project and get your API keys"
 	@echo "3. Copy .env.example to .env and add your keys"
 	@echo "4. Run 'make agent' to test the setup"

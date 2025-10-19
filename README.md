@@ -102,11 +102,11 @@ docker compose up -d
 docker compose logs -f langfuse-web
 
 # When you see "Ready", Langfuse is running
-# Access UI at http://localhost:3000
+# Access UI at http://localhost:3200
 ```
 
 **First-time setup in Langfuse UI**:
-1. Navigate to http://localhost:3000
+1. Navigate to http://localhost:3200
 2. Create your account
 3. Create a new project
 4. Go to Settings → API Keys
@@ -195,7 +195,7 @@ This produces:
 ### 4. Analyze and Iterate
 
 1. **Review failures** in the console output
-2. **Examine traces** in Langfuse (http://localhost:3000)
+2. **Examine traces** in Langfuse (http://localhost:3200)
 3. **Identify patterns**: Are failures in specific categories?
 4. **Make improvements**:
    - Update prompts
@@ -233,7 +233,7 @@ Metric Averages
 
 ### Viewing Traces
 
-1. Go to http://localhost:3000
+1. Go to http://localhost:3200
 2. Navigate to "Traces"
 3. Click on any trace to see:
    - Full prompt and completion
