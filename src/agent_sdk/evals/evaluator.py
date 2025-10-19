@@ -16,7 +16,7 @@ from rich.table import Table
 from agent_sdk.agents.customer_support import CustomerSupportAgent
 from agent_sdk.evals.metrics import AnswerRelevanceMetric, FaithfulnessMetric, GroundTruthMetric
 from agent_sdk.utils.config import Config
-from agent_sdk.utils.models import CustomerQuery, EvalResult
+from agent_sdk.utils.models import AgentResponse, CustomerQuery, EvalResult
 
 
 class Evaluator:

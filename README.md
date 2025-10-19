@@ -1,33 +1,46 @@
-# Claude Agent SDK Starter
+# Claude Agent SDK Starter - Receipt Inspection
 
 A production-ready starter project demonstrating **eval-driven development** for LLM-based agent systems using Claude, Langfuse, and modern Python best practices.
 
 ## Overview
 
-This project showcases how to build, evaluate, and iterate on AI agent systems using:
+This project showcases how to build, evaluate, and iterate on AI agent systems using a **receipt inspection and audit decision** use case:
 
 - **Evaluation-Driven Development**: Systematic approach to improving AI agents through measurable metrics
 - **Langfuse Integration**: Complete observability with self-hosted tracing and monitoring
-- **Customer Support Agent**: Real-world RAG-like example with knowledge base retrieval
-- **Multiple Evaluation Metrics**: Faithfulness, answer relevance, and ground truth matching
+- **Receipt Inspection Agent**: Vision-based extraction of structured data from receipt images and automated audit decisions
+- **Multiple Evaluation Metrics**: Audit decision accuracy, criteria evaluation, and extraction accuracy
 - **Production Best Practices**: Type hints, async/await, structured logging, and comprehensive testing
 
-Based on principles from [Hamel Husain and Shreya Shankar's guide to building eval systems](https://www.lennysnewsletter.com/p/building-eval-systems-that-improve).
+Based on principles from the [OpenAI Cookbook's Eval-Driven System Design guide](https://cookbook.openai.com/examples/partners/eval_driven_system_design/receipt_inspection) and [Hamel Husain and Shreya Shankar's guide to building eval systems](https://www.lennysnewsletter.com/p/building-eval-systems-that-improve).
 
 ## Features
 
 ### Agent System
-- **Customer Support Agent** with RAG-like knowledge base retrieval
-- Powered by Claude 3.5 Sonnet
-- Structured responses with reasoning traces
+- **Receipt Inspection Agent** with vision-based data extraction
+- Automated audit decision making based on configurable criteria
+- Powered by Claude 3.5 Sonnet with vision capabilities
+- Structured outputs with reasoning traces
 - Full Langfuse observability integration
 
+### Use Case: Receipt Parsing and Audit Decisions
+
+The system processes receipt images and makes audit decisions based on:
+
+1. **NOT_TRAVEL_RELATED**: Identifies if expenses are not travel-related (office supplies, food, etc.)
+2. **AMOUNT_OVER_LIMIT**: Flags receipts exceeding $50
+3. **MATH_ERROR**: Detects arithmetic errors in receipt totals
+4. **HANDWRITTEN_X**: Identifies receipts marked with handwritten "X"
+
+A receipt needs auditing if **any** criterion is violated. This mirrors real-world expense validation workflows where certain receipts require human review.
+
 ### Evaluation Framework
-- **Faithfulness Metric**: Ensures responses are grounded in provided context
-- **Answer Relevance Metric**: Validates responses address the query
-- **Ground Truth Matching**: Compares against expected answers
+- **Audit Decision Metric**: Validates final audit decision correctness
+- **Audit Criteria Metric**: Evaluates accuracy of individual criterion assessments
+- **Extraction Accuracy Metric**: Measures receipt data extraction quality
 - Automated evaluation pipeline with rich console output
 - Results tracking and export
+- LLM-as-judge for nuanced evaluations
 
 ### Observability
 - Self-hosted Langfuse setup with Docker Compose
@@ -42,7 +55,8 @@ claude-agent-sdk-starter/
 ├── src/
 │   └── agent_sdk/
 │       ├── agents/              # Agent implementations
-│       │   └── customer_support.py
+│       │   ├── customer_support.py (legacy)
+│       │   └── receipt_inspection.py
 │       ├── evals/               # Evaluation framework
 │       │   ├── evaluator.py
 │       │   └── metrics.py
@@ -50,13 +64,16 @@ claude-agent-sdk-starter/
 │           ├── config.py
 │           └── models.py
 ├── data/
-│   └── datasets/                # Test data and knowledge base
-│       ├── test_cases.json
-│       └── knowledge_base.json
+│   ├── datasets/                # Test data
+│   │   ├── receipt_test_cases.json
+│   │   ├── test_cases.json (legacy)
+│   │   └── knowledge_base.json (legacy)
+│   └── images/                  # Receipt images (not included)
 ├── examples/                    # Example scripts
-│   ├── run_agent.py
-│   ├── run_evaluation.py
-│   └── interactive_agent.py
+│   ├── run_receipt_inspection.py
+│   ├── run_receipt_evaluation.py
+│   ├── run_agent.py (legacy)
+│   └── run_evaluation.py (legacy)
 ├── tests/                       # Unit and integration tests
 ├── docker-compose.yml           # Langfuse self-hosted setup
 ├── pyproject.toml              # Project configuration
@@ -126,58 +143,87 @@ cp .env.example .env
 
 ### 4. Run Examples
 
-**Simple Agent Query**:
+**Process a Single Receipt**:
 ```bash
-python examples/run_agent.py
+python examples/run_receipt_inspection.py
 ```
 
-**Interactive Mode**:
-```bash
-python examples/interactive_agent.py
-```
+This will:
+- Extract structured details from a receipt image
+- Evaluate the receipt against audit criteria
+- Display the audit decision and reasoning
+- Track the operation in Langfuse
 
 **Run Evaluations**:
 ```bash
-python examples/run_evaluation.py
+python examples/run_receipt_evaluation.py
 ```
 
 The evaluation will:
-- Process all 10 test cases from `data/datasets/test_cases.json`
-- Evaluate each response using 3 metrics
-- Display results in a rich console table
+- Process all 10 test cases from `data/datasets/receipt_test_cases.json`
+- Evaluate each receipt using 3 metrics:
+  - Audit Decision Correctness (most critical)
+  - Audit Criteria Accuracy
+  - Extraction Accuracy
+- Display results in rich console tables
 - Save detailed results to `eval_results/`
 - Track all traces in Langfuse
 
+**Note**: The example scripts expect receipt images in `data/images/`. The repository includes test case definitions but not the actual images. You can:
+- Add your own receipt images
+- Modify the test cases to point to your images
+- Use the structure as a template for your own receipt processing system
+
 ## Eval-Driven Development Workflow
 
-This project demonstrates the systematic approach to improving AI agents:
+This project demonstrates the systematic approach to improving AI agents through a receipt inspection use case:
 
 ### 1. Define Metrics That Matter
 
-Instead of generic scores, we measure what actually impacts user experience:
+Instead of generic scores, we measure what actually impacts business outcomes:
 
-- **Faithfulness**: Does the agent hallucinate or stick to facts?
-- **Answer Relevance**: Does it actually answer the question?
-- **Ground Truth**: Does it match expected behavior?
+- **Audit Decision Correctness**: Did the system make the right final decision? (Most critical)
+- **Audit Criteria Accuracy**: Were individual criteria (travel-related, amount, math, marks) correctly evaluated?
+- **Extraction Accuracy**: How accurately were receipt details extracted?
+
+These metrics directly connect to business KPIs:
+- False negatives (missing audit-worthy receipts) = compliance risk
+- False positives (unnecessary audits) = wasted human review time
+- Extraction errors = downstream decision errors
 
 See `src/agent_sdk/evals/metrics.py` for implementations.
 
 ### 2. Build a Test Dataset
 
-Create test cases that represent real user scenarios:
+Create test cases that represent real receipt scenarios:
 
 ```json
 {
-  "id": "test_001",
-  "query": "How do I reset my password?",
+  "id": "receipt_001",
+  "receipt_id": "rec_walmart_supplies",
+  "image_path": "data/images/walmart_supplies.jpg",
+  "description": "Walmart receipt for office supplies",
   "ground_truth": {
-    "expected_answer": "...",
-    "context": "..."
+    "details": {
+      "merchant": "Walmart",
+      "total": "54.96",
+      "items": [...]
+    },
+    "audit_decision": {
+      "not_travel_related": true,
+      "amount_over_limit": true,
+      "needs_audit": true,
+      "reasoning": "..."
+    }
   }
 }
 ```
 
-See `data/datasets/test_cases.json` for 10 example test cases.
+See `data/datasets/receipt_test_cases.json` for 10 example test cases covering:
+- Travel expenses (gas, hotel, car rental)
+- Non-travel expenses (office supplies, food)
+- Edge cases (math errors, handwritten marks)
+- Various amounts (under/over $50 threshold)
 
 ### 3. Run Evaluations
 
@@ -207,26 +253,26 @@ This produces:
 ### Example Output
 
 ```
-Evaluation Summary
+Receipt Inspection Evaluation
 
 Overall Results
 ┏━━━━━━━━━━━━━┳━━━━━━━┓
 ┃ Metric      ┃ Value ┃
 ┡━━━━━━━━━━━━━╇━━━━━━━┩
 │ Total Cases │ 10    │
-│ Passed      │ 8     │
-│ Failed      │ 2     │
-│ Pass Rate   │ 80.0% │
+│ Passed      │ 9     │
+│ Failed      │ 1     │
+│ Pass Rate   │ 90.0% │
 └─────────────┴───────┘
 
 Metric Averages
-┏━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┓
-┃ Metric            ┃ Average Score ┃
-┡━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━┩
-│ faithfulness      │ 0.85          │
-│ answer_relevance  │ 0.90          │
-│ ground_truth_match│ 0.72          │
-└───────────────────┴───────────────┘
+┏━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┓
+┃ Metric                  ┃ Average Score ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━┩
+│ audit_decision_correct  │ 0.90          │
+│ audit_criteria_accuracy │ 0.95          │
+│ extraction_accuracy     │ 0.85          │
+└─────────────────────────┴───────────────┘
 ```
 
 ## Langfuse Features
@@ -265,60 +311,80 @@ When deploying to production:
 
 ## Customization
 
+### Modifying Audit Criteria
+
+To change audit rules, edit the prompts in `src/agent_sdk/agents/receipt_inspection.py`:
+
+```python
+# Example: Change the amount threshold from $50 to $100
+audit_prompt = """...
+2. AMOUNT_OVER_LIMIT: The total amount exceeds $100  # Changed from $50
+..."""
+```
+
+Or add new criteria:
+
+```python
+# Example: Add a new criterion for weekend expenses
+class AuditDecision(BaseModel):
+    # ... existing fields ...
+    weekend_expense: bool = Field(
+        description="True if the expense occurred on a weekend"
+    )
+```
+
 ### Adding New Metrics
 
 Create a new metric in `src/agent_sdk/evals/metrics.py`:
 
 ```python
-class CustomMetric(Metric):
+class CustomReceiptMetric(Metric):
     def __init__(self):
         super().__init__(name="custom_metric", threshold=0.8)
 
-    async def evaluate(self, query, response, ground_truth):
-        # Your evaluation logic
+    async def evaluate(self, audit_decision, ground_truth):
+        # Your evaluation logic for audit decisions
         score = ...
         explanation = ...
         passed = score >= self.threshold
         return score, explanation, passed
 ```
 
-Add to evaluator in `src/agent_sdk/evals/evaluator.py`:
+Add to evaluation script in `examples/run_receipt_evaluation.py`:
 
 ```python
-self.metrics = [
-    FaithfulnessMetric(config),
-    AnswerRelevanceMetric(config),
-    CustomMetric(),  # Add your metric
+metrics = [
+    AuditDecisionMetric(),
+    AuditCriteriaMetric(),
+    CustomReceiptMetric(),  # Add your metric
 ]
 ```
 
 ### Adding Test Cases
 
-Edit `data/datasets/test_cases.json`:
+Edit `data/datasets/receipt_test_cases.json`:
 
 ```json
 {
-  "id": "test_011",
-  "query": "Your question here",
-  "context": {...},
+  "id": "receipt_011",
+  "receipt_id": "rec_your_test",
+  "image_path": "data/images/your_receipt.jpg",
+  "description": "Description of the test case",
   "ground_truth": {
-    "expected_answer": "Expected response",
-    "context": "Supporting documentation"
+    "details": {
+      "merchant": "Merchant Name",
+      "total": "99.99",
+      ...
+    },
+    "audit_decision": {
+      "not_travel_related": false,
+      "amount_over_limit": true,
+      "math_error": false,
+      "handwritten_x": false,
+      "needs_audit": true,
+      "reasoning": "Expected reasoning..."
+    }
   }
-}
-```
-
-### Expanding Knowledge Base
-
-Add entries to `data/datasets/knowledge_base.json`:
-
-```json
-{
-  "id": "kb_013",
-  "title": "New Topic",
-  "category": "category_name",
-  "content": "Detailed information...",
-  "tags": ["tag1", "tag2"]
 }
 ```
 
@@ -370,28 +436,54 @@ uv run pre-commit run --all-files
 
 ## Architecture Decisions
 
+### Why Vision + Text (Two-Step Process)?
+The receipt inspection agent uses a two-step process:
+1. **Vision API** extracts structured data from receipt images
+2. **Text-based LLM** makes audit decisions based on extracted data
+
+This approach:
+- Separates concerns (extraction vs. decision-making)
+- Enables easier debugging (can examine extracted data)
+- Allows for different evaluation metrics at each stage
+- Mirrors real-world workflows (OCR → business logic)
+
+Alternative: End-to-end vision model making decisions directly could reduce latency but sacrifices interpretability.
+
+### Why These Specific Audit Criteria?
+The four criteria (travel-related, amount limit, math errors, handwritten marks) are:
+- **Business-aligned**: Map directly to real expense validation needs
+- **Measurable**: Clear pass/fail evaluation
+- **Diverse**: Test different capabilities (classification, arithmetic, OCR)
+- **Representative**: Cover common edge cases in expense processing
+
 ### Why Async/Await?
 - Enables concurrent API calls during evaluation
 - Better performance when processing multiple test cases
 - Prepares codebase for production-scale concurrent requests
+- Critical for batch processing of receipt images
 
 ### Why Self-Hosted Langfuse?
-- Complete data privacy
+- Complete data privacy (important for financial documents)
 - No external dependencies for tracing
 - Customizable retention and storage
 - Free for unlimited usage
 
-### Why LLM-as-Judge for Evals?
-- Semantic understanding vs. keyword matching
-- Scales to complex evaluation criteria
-- Provides explanations for debugging
-- Correlates well with human judgment
+### Why Multiple Evaluation Metrics?
+- **Audit Decision Correctness**: The ultimate business outcome
+- **Audit Criteria Accuracy**: Diagnoses where the system fails
+- **Extraction Accuracy**: Identifies OCR/vision issues
+
+This layered approach helps pinpoint whether failures are due to:
+1. Poor vision/extraction
+2. Faulty business logic
+3. Edge cases not covered in prompts
 
 ### Why Structured Test Cases?
-- Version control for test data
-- Easy to review and update
-- Shareable across team
+- Version control for test data (Git-friendly JSON)
+- Easy to review and update with domain experts
+- Shareable across team (no proprietary formats)
 - Foundation for regression testing
+- Enables A/B testing of different prompts/models
 
 ## Troubleshooting
 
@@ -432,28 +524,44 @@ python -c "import sys; print(sys.path)"
 ## Resources
 
 ### Documentation
+- [OpenAI Cookbook: Eval-Driven System Design](https://cookbook.openai.com/examples/partners/eval_driven_system_design/receipt_inspection)
 - [Langfuse Docs](https://langfuse.com/docs)
 - [Anthropic API Reference](https://docs.anthropic.com/)
+- [Claude Vision API Guide](https://docs.anthropic.com/claude/docs/vision)
 - [Building Eval Systems (Lenny's Newsletter)](https://www.lennysnewsletter.com/p/building-eval-systems-that-improve)
 
 ### Related Projects
 - [Langfuse Python SDK](https://github.com/langfuse/langfuse-python)
 - [Anthropic Python SDK](https://github.com/anthropics/anthropic-sdk-python)
+- [OpenAI Cookbook](https://github.com/openai/openai-cookbook)
 
 ### Learning Resources
 - [AI Evals Course by Hamel & Shreya](https://maven.com/parlance-labs/evals)
 - [LLM Evaluation Guide](https://www.oreilly.com/library/view/building-llm-powered/9781098150228/)
+- [Receipt Handwriting Detection Dataset](https://universe.roboflow.com/newreceipts/receipt-handwriting-detection) (CC BY 4.0)
 
 ## Contributing
 
 Contributions are welcome! Areas for improvement:
 
-- Additional evaluation metrics
-- More example agents (code generation, data analysis, etc.)
-- Integration with vector databases (Pinecone, Weaviate, etc.)
-- Batch evaluation support
-- CI/CD pipeline examples
-- Production deployment guides
+- **Receipt-specific enhancements**:
+  - Support for more receipt formats (European, Asian receipts)
+  - Multi-page receipt handling
+  - Receipt image preprocessing (rotation, denoising)
+  - Integration with OCR services (Textract, Azure Form Recognizer)
+
+- **Evaluation improvements**:
+  - Additional audit criteria (merchant allowlists, category limits)
+  - Business metric tracking (audit rate vs. accuracy trade-off)
+  - A/B testing framework for prompt variations
+  - Regression detection
+
+- **General enhancements**:
+  - Batch receipt processing pipeline
+  - Real-time monitoring dashboards
+  - CI/CD pipeline examples
+  - Production deployment guides (Docker, Kubernetes)
+  - Cost optimization strategies
 
 ## License
 
@@ -461,7 +569,9 @@ MIT License - see LICENSE file for details
 
 ## Acknowledgments
 
-- Inspired by [Hamel Husain](https://twitter.com/HamelHusain) and [Shreya Shankar](https://twitter.com/sh_reya)'s work on LLM evaluations
+- Receipt inspection use case based on [OpenAI's Eval-Driven System Design Cookbook](https://cookbook.openai.com/examples/partners/eval_driven_system_design/receipt_inspection)
+- Eval-driven methodology inspired by [Hamel Husain](https://twitter.com/HamelHusain) and [Shreya Shankar](https://twitter.com/sh_reya)'s work on LLM evaluations
+- Receipt images dataset from [Roboflow Receipt Handwriting Detection](https://universe.roboflow.com/newreceipts/receipt-handwriting-detection) (CC BY 4.0)
 - Built with [Anthropic's Claude](https://www.anthropic.com/claude)
 - Observability powered by [Langfuse](https://langfuse.com/)
 

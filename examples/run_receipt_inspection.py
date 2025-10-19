@@ -1,0 +1,92 @@
+"""Example script demonstrating receipt inspection agent."""
+
+import asyncio
+import json
+import sys
+from pathlib import Path
+
+from rich import print
+from rich.console import Console
+from rich.table import Table
+
+# Add src to path
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+
+from agent_sdk.agents.receipt_inspection import ReceiptInspectionAgent
+from agent_sdk.utils.config import Config
+
+console = Console()
+
+
+async def main():
+    """Run receipt inspection example."""
+    # Initialize config and agent
+    config = Config()
+    agent = ReceiptInspectionAgent(config=config)
+
+    console.print("[bold cyan]Receipt Inspection Agent Demo[/bold cyan]\n")
+
+    # Example: Process a simulated receipt
+    # In a real scenario, you would provide an actual image path
+    example_image_path = "data/images/walmart_supplies.jpg"
+
+    console.print(f"[yellow]Processing receipt image:[/yellow] {example_image_path}\n")
+
+    try:
+        # Extract receipt details
+        console.print("[bold]Step 1: Extracting receipt details...[/bold]")
+        receipt_details = await agent.extract_receipt_details(
+            image_path=example_image_path,
+            receipt_id="example_001"
+        )
+
+        # Display extraction results
+        console.print("[green]Receipt details extracted successfully![/green]\n")
+        console.print("[bold]Extracted Details:[/bold]")
+        print(receipt_details.model_dump_json(indent=2))
+        console.print()
+
+        # Make audit decision
+        console.print("[bold]Step 2: Evaluating for audit...[/bold]")
+        audit_decision = await agent.evaluate_receipt_for_audit(receipt_details)
+
+        # Display audit decision
+        console.print("[green]Audit evaluation complete![/green]\n")
+
+        # Create a nice table for audit criteria
+        table = Table(title="Audit Decision")
+        table.add_column("Criterion", style="cyan")
+        table.add_column("Result", style="magenta")
+
+        table.add_row("Not Travel Related", "✓" if audit_decision.not_travel_related else "✗")
+        table.add_row("Amount Over $50", "✓" if audit_decision.amount_over_limit else "✗")
+        table.add_row("Math Error", "✓" if audit_decision.math_error else "✗")
+        table.add_row("Handwritten X", "✓" if audit_decision.handwritten_x else "✗")
+        table.add_row(
+            "[bold]Needs Audit[/bold]",
+            f"[bold]{'YES' if audit_decision.needs_audit else 'NO'}[/bold]"
+        )
+
+        console.print(table)
+        console.print(f"\n[bold]Reasoning:[/bold] {audit_decision.reasoning}\n")
+
+        # Show token usage
+        if "input_tokens" in audit_decision.metadata:
+            console.print(f"[dim]Input tokens: {audit_decision.metadata['input_tokens']}[/dim]")
+            console.print(f"[dim]Output tokens: {audit_decision.metadata['output_tokens']}[/dim]")
+            console.print(f"[dim]Model: {audit_decision.metadata['model']}[/dim]")
+
+        console.print("\n[green]✓ Receipt inspection complete![/green]")
+        console.print("[yellow]→ View traces in Langfuse: http://localhost:3200[/yellow]\n")
+
+    except FileNotFoundError:
+        console.print(f"[red]Error: Image file not found: {example_image_path}[/red]")
+        console.print("[yellow]Note: This example requires actual receipt images.[/yellow]")
+        console.print("[yellow]See data/datasets/receipt_test_cases.json for test case structure.[/yellow]")
+    except Exception as e:
+        console.print(f"[red]Error processing receipt: {str(e)}[/red]")
+        raise
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

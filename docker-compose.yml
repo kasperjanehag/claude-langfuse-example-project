@@ -23,6 +23,11 @@ services:
     image: clickhouse/clickhouse-server:24-alpine
     container_name: langfuse-clickhouse
     restart: unless-stopped
+    platform: linux/amd64
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
     environment:
       CLICKHOUSE_DB: langfuse
       CLICKHOUSE_USER: langfuse
@@ -56,14 +61,14 @@ services:
 
   # Langfuse Web Application
   langfuse-web:
-    image: langfuse/langfuse:latest
+    image: langfuse/langfuse:2
     container_name: langfuse-web
     restart: unless-stopped
     depends_on:
       langfuse-db:
         condition: service_healthy
-      langfuse-clickhouse:
-        condition: service_healthy
+      # langfuse-clickhouse:
+      #   condition: service_healthy
       langfuse-redis:
         condition: service_healthy
     ports:
@@ -72,10 +77,10 @@ services:
       # Database
       DATABASE_URL: postgresql://langfuse:langfuse_password_change_me@langfuse-db:5432/langfuse  # CHANGEME
 
-      # ClickHouse
-      CLICKHOUSE_URL: http://langfuse-clickhouse:8123
-      CLICKHOUSE_USER: langfuse
-      CLICKHOUSE_PASSWORD: clickhouse_password_change_me  # CHANGEME
+      # ClickHouse (disabled for macOS compatibility)
+      # CLICKHOUSE_URL: http://langfuse-clickhouse:8123
+      # CLICKHOUSE_USER: langfuse
+      # CLICKHOUSE_PASSWORD: clickhouse_password_change_me  # CHANGEME
 
       # Redis
       REDIS_HOST: langfuse-redis
@@ -87,8 +92,8 @@ services:
       NEXTAUTH_SECRET: your_nextauth_secret_change_me_min_32_chars  # CHANGEME - minimum 32 characters
       SALT: your_salt_change_me_min_32_characters_long  # CHANGEME - minimum 32 characters
 
-      # Optional: Telemetry (set to 1 to enable)
-      TELEMETRY_ENABLED: 0
+      # Optional: Telemetry (set to true to enable)
+      TELEMETRY_ENABLED: "false"
 
       # Optional: Configure auth providers
       # AUTH_DISABLE_USERNAME_PASSWORD: false
@@ -99,24 +104,24 @@ services:
 
   # Langfuse Worker (for async processing)
   langfuse-worker:
-    image: langfuse/langfuse:latest
+    image: langfuse/langfuse:2
     container_name: langfuse-worker
     restart: unless-stopped
     depends_on:
       langfuse-db:
         condition: service_healthy
-      langfuse-clickhouse:
-        condition: service_healthy
+      # langfuse-clickhouse:
+      #   condition: service_healthy
       langfuse-redis:
         condition: service_healthy
     environment:
       # Database
       DATABASE_URL: postgresql://langfuse:langfuse_password_change_me@langfuse-db:5432/langfuse  # CHANGEME
 
-      # ClickHouse
-      CLICKHOUSE_URL: http://langfuse-clickhouse:8123
-      CLICKHOUSE_USER: langfuse
-      CLICKHOUSE_PASSWORD: clickhouse_password_change_me  # CHANGEME
+      # ClickHouse (disabled for macOS compatibility)
+      # CLICKHOUSE_URL: http://langfuse-clickhouse:8123
+      # CLICKHOUSE_USER: langfuse
+      # CLICKHOUSE_PASSWORD: clickhouse_password_change_me  # CHANGEME
 
       # Redis
       REDIS_HOST: langfuse-redis
