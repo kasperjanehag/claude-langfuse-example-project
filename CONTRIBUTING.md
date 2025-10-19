@@ -11,25 +11,22 @@ git clone https://github.com/yourusername/claude-agent-sdk-starter.git
 cd claude-agent-sdk-starter
 ```
 
-2. **Create a virtual environment**
+2. **Create a virtual environment and install dependencies**
 
 ```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
+# Using uv (recommended - fast!)
+uv venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+uv pip install -e ".[dev]"
 
-3. **Install development dependencies**
-
-```bash
+# Or use make
 make dev
-# or
-pip install -e ".[dev]"
 ```
 
-4. **Install pre-commit hooks**
+3. **Install pre-commit hooks**
 
 ```bash
-pre-commit install
+uv run pre-commit install
 ```
 
 ## Development Workflow
@@ -41,10 +38,10 @@ pre-commit install
 make test
 
 # Run specific test file
-pytest tests/unit/test_models.py
+uv run pytest tests/unit/test_models.py
 
 # Run with verbose output
-pytest -v
+uv run pytest -v
 ```
 
 ### Code Quality
@@ -56,10 +53,10 @@ make format
 # Run linters
 make lint
 
-# Or run individually
-black src/ tests/ examples/
-ruff check src/ tests/ examples/
-mypy src/
+# Or run individually with uv
+uv run black src/ tests/ examples/
+uv run ruff check src/ tests/ examples/
+uv run mypy src/
 ```
 
 ### Testing Changes Locally

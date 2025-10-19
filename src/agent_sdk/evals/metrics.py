@@ -53,7 +53,10 @@ class FaithfulnessMetric(Metric):
     def __init__(self, config: Optional[Config] = None):
         super().__init__(name="faithfulness", threshold=0.7)
         self.config = config or Config()
-        self.client = Anthropic(api_key=self.config.anthropic_api_key)
+        self.client = Anthropic(
+            api_key=self.config.anthropic_api_key,
+            base_url=self.config.anthropic_base_url
+        )
 
     @observe(name="faithfulness_eval")
     async def evaluate(
@@ -137,7 +140,10 @@ class AnswerRelevanceMetric(Metric):
     def __init__(self, config: Optional[Config] = None):
         super().__init__(name="answer_relevance", threshold=0.7)
         self.config = config or Config()
-        self.client = Anthropic(api_key=self.config.anthropic_api_key)
+        self.client = Anthropic(
+            api_key=self.config.anthropic_api_key,
+            base_url=self.config.anthropic_base_url
+        )
 
     @observe(name="answer_relevance_eval")
     async def evaluate(
@@ -218,7 +224,10 @@ class GroundTruthMetric(Metric):
     def __init__(self, config: Optional[Config] = None):
         super().__init__(name="ground_truth_match", threshold=0.8)
         self.config = config or Config()
-        self.client = Anthropic(api_key=self.config.anthropic_api_key)
+        self.client = Anthropic(
+            api_key=self.config.anthropic_api_key,
+            base_url=self.config.anthropic_base_url
+        )
 
     @observe(name="ground_truth_eval")
     async def evaluate(

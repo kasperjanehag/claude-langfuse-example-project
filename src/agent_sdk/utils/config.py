@@ -14,8 +14,9 @@ load_dotenv()
 class Config(BaseSettings):
     """Application configuration."""
 
-    # API Keys
+    # Anthropic Configuration
     anthropic_api_key: str = Field(default="", alias="ANTHROPIC_API_KEY")
+    anthropic_base_url: str = Field(default="https://api.anthropic.com", alias="ANTHROPIC_BASE_URL")
 
     # Langfuse Configuration
     langfuse_public_key: str = Field(default="", alias="LANGFUSE_PUBLIC_KEY")

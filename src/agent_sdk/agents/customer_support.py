@@ -29,7 +29,10 @@ class CustomerSupportAgent:
             knowledge_base: List of knowledge base entries
         """
         self.config = config or Config()
-        self.client = Anthropic(api_key=self.config.anthropic_api_key)
+        self.client = Anthropic(
+            api_key=self.config.anthropic_api_key,
+            base_url=self.config.anthropic_base_url
+        )
         self.knowledge_base = knowledge_base or []
 
     def _retrieve_relevant_docs(self, query: str, top_k: int = 3) -> List[KnowledgeBase]:

@@ -68,6 +68,7 @@ claude-agent-sdk-starter/
 ### Prerequisites
 
 - Python 3.10 or higher
+- [uv](https://docs.astral.sh/uv/) - Fast Python package installer
 - Docker and Docker Compose
 - Anthropic API key
 
@@ -76,12 +77,15 @@ claude-agent-sdk-starter/
 ```bash
 cd claude-agent-sdk-starter
 
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+# Create virtual environment and install dependencies with uv
+uv venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
-# Install dependencies
-pip install -e ".[dev]"
+# Install package with dependencies
+uv pip install -e ".[dev]"
+
+# Or use uv sync to install from lock file (faster)
+uv sync --all-extras
 ```
 
 ### 2. Set Up Langfuse (Self-Hosted)
@@ -331,37 +335,37 @@ export MODEL=claude-3-opus-20240229
 ### Running Tests
 
 ```bash
-# Run all tests
-pytest
+# Run all tests (uv will use the virtual environment)
+uv run pytest
 
 # With coverage
-pytest --cov=src/agent_sdk --cov-report=html
+uv run pytest --cov=src/agent_sdk --cov-report=html
 
 # Run specific test file
-pytest tests/unit/test_agent.py
+uv run pytest tests/unit/test_agent.py
 ```
 
 ### Code Quality
 
 ```bash
 # Format code
-black src/ tests/ examples/
+uv run black src/ tests/ examples/
 
 # Lint
-ruff check src/ tests/ examples/
+uv run ruff check src/ tests/ examples/
 
 # Type checking
-mypy src/
+uv run mypy src/
 ```
 
 ### Pre-commit Hooks
 
 ```bash
 # Install pre-commit hooks
-pre-commit install
+uv run pre-commit install
 
 # Run manually
-pre-commit run --all-files
+uv run pre-commit run --all-files
 ```
 
 ## Architecture Decisions

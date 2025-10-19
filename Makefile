@@ -1,4 +1,4 @@
-.PHONY: install dev test lint format clean docker-up docker-down eval agent interactive help
+.PHONY: install dev test lint format clean docker-up docker-down eval agent interactive help venv sync
 
 help: ## Show this help message
 	@echo 'Usage: make [target]'
@@ -6,25 +6,31 @@ help: ## Show this help message
 	@echo 'Available targets:'
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
-install: ## Install package in production mode
-	pip install -e .
+venv: ## Create virtual environment with uv
+	uv venv
 
-dev: ## Install package with development dependencies
-	pip install -e ".[dev]"
+sync: ## Sync dependencies from lock file (fast)
+	uv sync --all-extras
+
+install: ## Install package in production mode
+	uv pip install -e .
+
+dev: venv ## Install package with development dependencies
+	uv pip install -e ".[dev]"
 
 test: ## Run tests with coverage
-	pytest --cov=src/agent_sdk --cov-report=html --cov-report=term-missing
+	uv run pytest --cov=src/agent_sdk --cov-report=html --cov-report=term-missing
 
 test-fast: ## Run tests without coverage
-	pytest -v
+	uv run pytest -v
 
 lint: ## Run linting checks
-	ruff check src/ tests/ examples/
-	mypy src/
+	uv run ruff check src/ tests/ examples/
+	uv run mypy src/
 
 format: ## Format code with black and ruff
-	black src/ tests/ examples/
-	ruff check --fix src/ tests/ examples/
+	uv run black src/ tests/ examples/
+	uv run ruff check --fix src/ tests/ examples/
 
 clean: ## Clean up generated files
 	rm -rf build/
@@ -35,6 +41,8 @@ clean: ## Clean up generated files
 	rm -rf htmlcov/
 	rm -rf .mypy_cache/
 	rm -rf .ruff_cache/
+	rm -rf .venv/
+	rm -rf uv.lock
 	find . -type d -name __pycache__ -exec rm -rf {} +
 	find . -type f -name "*.pyc" -delete
 
@@ -51,13 +59,13 @@ docker-logs: ## Show Langfuse logs
 	docker compose logs -f
 
 eval: ## Run evaluation on test dataset
-	python examples/run_evaluation.py
+	uv run python examples/run_evaluation.py
 
 agent: ## Run simple agent demo
-	python examples/run_agent.py
+	uv run python examples/run_agent.py
 
 interactive: ## Start interactive agent session
-	python examples/interactive_agent.py
+	uv run python examples/interactive_agent.py
 
 setup: dev docker-up ## Complete setup: install dependencies and start Langfuse
 	@echo ""
