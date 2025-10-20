@@ -16,14 +16,14 @@ dev-dependencies = [
 [project]
 name = "agent-sdk"
 version = "0.1.0"
-description = "An example agent system demonstrating eval-driven development with Langfuse tracing"
+description = "Receipt inspection agent demonstrating eval-driven development with Claude and Langfuse"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
 authors = [
     {name = "Your Name", email = "your.email@example.com"}
 ]
-keywords = ["llm", "agents", "evaluations", "langfuse", "observability"]
+keywords = ["llm", "agents", "evaluations", "langfuse", "observability", "receipt-inspection"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -55,10 +55,10 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/claude-agent-sdk-starter"
-Documentation = "https://github.com/yourusername/claude-agent-sdk-starter#readme"
-Repository = "https://github.com/yourusername/claude-agent-sdk-starter"
-Issues = "https://github.com/yourusername/claude-agent-sdk-starter/issues"
+Homepage = "https://github.com/yourusername/claude-agent-eval-starter"
+Documentation = "https://github.com/yourusername/claude-agent-eval-starter#readme"
+Repository = "https://github.com/yourusername/claude-agent-eval-starter"
+Issues = "https://github.com/yourusername/claude-agent-eval-starter/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/agent_sdk"]

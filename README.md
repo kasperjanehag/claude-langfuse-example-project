@@ -1,4 +1,4 @@
-# Claude Agent SDK Starter - Receipt Inspection
+# Claude Agent Eval Starter - Receipt Inspection
 
 A production-ready starter project demonstrating **eval-driven development** for LLM-based agent systems using Claude, Langfuse, and modern Python best practices.
 
@@ -51,29 +51,23 @@ A receipt needs auditing if **any** criterion is violated. This mirrors real-wor
 ## Project Structure
 
 ```
-claude-agent-sdk-starter/
+claude-agent-eval-starter/
 ├── src/
 │   └── agent_sdk/
 │       ├── agents/              # Agent implementations
-│       │   ├── customer_support.py (legacy)
 │       │   └── receipt_inspection.py
 │       ├── evals/               # Evaluation framework
-│       │   ├── evaluator.py
-│       │   └── metrics.py
+│       │   └── metrics.py       # Receipt-specific evaluation metrics
 │       └── utils/               # Shared utilities
 │           ├── config.py
 │           └── models.py
 ├── data/
 │   ├── datasets/                # Test data
-│   │   ├── receipt_test_cases.json
-│   │   ├── test_cases.json (legacy)
-│   │   └── knowledge_base.json (legacy)
+│   │   └── receipt_test_cases.json
 │   └── images/                  # Receipt images (not included)
 ├── examples/                    # Example scripts
 │   ├── run_receipt_inspection.py
-│   ├── run_receipt_evaluation.py
-│   ├── run_agent.py (legacy)
-│   └── run_evaluation.py (legacy)
+│   └── run_receipt_evaluation.py
 ├── tests/                       # Unit and integration tests
 ├── docker-compose.yml           # Langfuse self-hosted setup
 ├── pyproject.toml              # Project configuration
@@ -92,7 +86,7 @@ claude-agent-sdk-starter/
 ### 1. Clone and Install
 
 ```bash
-cd claude-agent-sdk-starter
+cd claude-agent-eval-starter
 
 # Create virtual environment and install dependencies with uv
 uv venv

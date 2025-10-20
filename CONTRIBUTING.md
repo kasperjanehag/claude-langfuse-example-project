@@ -1,4 +1,4 @@
-# Contributing to Claude Agent SDK Starter
+# Contributing to Claude Agent Eval Starter
 
 Thank you for your interest in contributing! This document provides guidelines and instructions for contributing to this project.
 
@@ -7,8 +7,8 @@ Thank you for your interest in contributing! This document provides guidelines a
 1. **Fork and clone the repository**
 
 ```bash
-git clone https://github.com/yourusername/claude-agent-sdk-starter.git
-cd claude-agent-sdk-starter
+git clone https://github.com/yourusername/claude-agent-eval-starter.git
+cd claude-agent-eval-starter
 ```
 
 2. **Create a virtual environment and install dependencies**
