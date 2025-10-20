@@ -159,3 +159,6 @@ langfuse-data/
 # Eval results
 eval_results/
 *.json.gz
+
+# Test files (may contain actual API calls)
+test_*.py
