@@ -7,8 +7,8 @@ Thank you for your interest in contributing! This document provides guidelines a
 1. **Fork and clone the repository**
 
 ```bash
-git clone https://github.com/yourusername/claude-agent-eval-starter.git
-cd claude-agent-eval-starter
+git clone https://github.com/kasperjanehag/claude-langfuse-example-project.git
+cd claude-langfuse-example-project
 ```
 
 2. **Create a virtual environment and install dependencies**

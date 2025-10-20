@@ -55,10 +55,10 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/claude-agent-eval-starter"
-Documentation = "https://github.com/yourusername/claude-agent-eval-starter#readme"
-Repository = "https://github.com/yourusername/claude-agent-eval-starter"
-Issues = "https://github.com/yourusername/claude-agent-eval-starter/issues"
+Homepage = "https://github.com/kasperjanehag/claude-langfuse-example-project"
+Documentation = "https://github.com/kasperjanehag/claude-langfuse-example-project#readme"
+Repository = "https://github.com/kasperjanehag/claude-langfuse-example-project"
+Issues = "https://github.com/kasperjanehag/claude-langfuse-example-project/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/agent_sdk"]
