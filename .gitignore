@@ -162,3 +162,12 @@ eval_results/
 
 # Test files (may contain actual API calls)
 test_*.py
+
+# Receipt images and Roboflow dataset
+data/train/
+data/test/
+data/valid/
+data/images/
+data/*.yaml
+data/*.txt
+data/.DS_Store

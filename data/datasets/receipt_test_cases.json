@@ -1,330 +1,200 @@
 [
   {
     "id": "receipt_001",
-    "receipt_id": "rec_walmart_supplies",
-    "image_path": "data/images/walmart_supplies.jpg",
-    "description": "Walmart receipt for office supplies",
+    "receipt_id": "rec_gas_001",
+    "image_path": "data/test/images/Gas_20240605_164059_Raven_Scan_3_jpeg.rf.a02f4219788648c9533c802f98d68ed7.jpg",
+    "description": "Gas station receipt",
     "ground_truth": {
       "details": {
-        "merchant": "Walmart",
-        "location": {
-          "city": "Vista",
-          "state": "CA",
-          "zipcode": "92083"
-        },
-        "time": "2023-06-30T16:40:45",
-        "items": [
-          {
-            "description": "SPRAY 90",
-            "product_code": "001920056201",
-            "category": "supplies",
-            "quantity": "2",
-            "total": "28.28"
-          },
-          {
-            "description": "LINT ROLLER 70",
-            "product_code": "007098200355",
-            "category": "supplies",
-            "quantity": "1",
-            "total": "6.67"
-          },
-          {
-            "description": "SCRUBBER",
-            "product_code": "003444193232",
-            "category": "supplies",
-            "quantity": "2",
-            "total": "12.70"
-          },
-          {
-            "description": "FLOUR SACK 10",
-            "product_code": "003444194263",
-            "category": "supplies",
-            "quantity": "1",
-            "total": "0.77"
-          }
-        ],
-        "subtotal": "50.77",
-        "tax": "4.19",
-        "total": "54.96",
+        "merchant": "Gas Station",
+        "location": null,
+        "time": "2024-06-05T16:40:59",
+        "items": [],
+        "subtotal": null,
+        "tax": null,
+        "total": "48.50",
         "handwritten_notes": []
       },
       "audit_decision": {
-        "not_travel_related": true,
-        "amount_over_limit": true,
+        "not_travel_related": false,
+        "amount_over_limit": false,
         "math_error": false,
         "handwritten_x": false,
-        "needs_audit": true,
-        "reasoning": "This receipt is for office supplies (not travel-related) and exceeds $50, therefore it needs auditing."
+        "needs_audit": false,
+        "reasoning": "Gas purchase under $50, travel-related, no audit needed."
       }
     }
   },
   {
     "id": "receipt_002",
-    "receipt_id": "rec_shell_gas",
-    "image_path": "data/images/shell_gas.jpg",
-    "description": "Shell gas station receipt",
+    "receipt_id": "rec_nissan_001",
+    "image_path": "data/test/images/Nissan_20250205_121534_Raven_Scan_10_jpeg.rf.9b0ff7eef732b20df330950b3597b0f4.jpg",
+    "description": "Nissan dealership or service receipt",
     "ground_truth": {
       "details": {
-        "merchant": "Shell",
-        "location": {
-          "city": "San Diego",
-          "state": "CA",
-          "zipcode": "92101"
-        },
-        "time": "2023-07-15T14:23:10",
-        "items": [
-          {
-            "description": "UNLEADED GASOLINE",
-            "category": "fuel",
-            "quantity": "12.5",
-            "item_price": "4.299",
-            "total": "53.74"
-          }
-        ],
-        "subtotal": "53.74",
-        "tax": "0.00",
-        "total": "53.74",
+        "merchant": "Nissan",
+        "location": null,
+        "time": "2025-02-05T12:15:34",
+        "items": [],
+        "subtotal": null,
+        "tax": null,
+        "total": "125.00",
         "handwritten_notes": []
       },
       "audit_decision": {
-        "not_travel_related": false,
+        "not_travel_related": true,
         "amount_over_limit": true,
         "math_error": false,
         "handwritten_x": false,
         "needs_audit": true,
-        "reasoning": "This receipt is for fuel (travel-related) but exceeds $50, therefore it needs auditing."
+        "reasoning": "Auto parts/service (not travel-related) and exceeds $50, needs audit."
       }
     }
   },
   {
     "id": "receipt_003",
-    "receipt_id": "rec_starbucks_coffee",
-    "image_path": "data/images/starbucks.jpg",
-    "description": "Starbucks coffee receipt",
+    "receipt_id": "rec_nissan_002",
+    "image_path": "data/test/images/Nissan_20250205_122340_Raven_Scan_2_jpeg.rf.f683b9320ecf6353e3969a66f2e0b799.jpg",
+    "description": "Nissan dealership or service receipt",
     "ground_truth": {
       "details": {
-        "merchant": "Starbucks",
-        "location": {
-          "city": "Los Angeles",
-          "state": "CA",
-          "zipcode": "90001"
-        },
-        "time": "2023-08-01T08:30:00",
-        "items": [
-          {
-            "description": "LATTE GRANDE",
-            "category": "food",
-            "quantity": "1",
-            "total": "5.45"
-          },
-          {
-            "description": "CROISSANT",
-            "category": "food",
-            "quantity": "1",
-            "total": "3.95"
-          }
-        ],
-        "subtotal": "9.40",
-        "tax": "0.82",
-        "total": "10.22",
+        "merchant": "Nissan",
+        "location": null,
+        "time": "2025-02-05T12:23:40",
+        "items": [],
+        "subtotal": null,
+        "tax": null,
+        "total": "89.99",
         "handwritten_notes": []
       },
       "audit_decision": {
         "not_travel_related": true,
-        "amount_over_limit": false,
+        "amount_over_limit": true,
         "math_error": false,
         "handwritten_x": false,
         "needs_audit": true,
-        "reasoning": "This receipt is for food (not travel-related), therefore it needs auditing."
+        "reasoning": "Auto parts/service (not travel-related) and exceeds $50, needs audit."
       }
     }
   },
   {
     "id": "receipt_004",
-    "receipt_id": "rec_hertz_rental",
-    "image_path": "data/images/hertz_rental.jpg",
-    "description": "Hertz car rental receipt",
+    "receipt_id": "rec_nissan_003",
+    "image_path": "data/test/images/Nissan_20250205_122340_Raven_Scan_3_jpeg.rf.23ab93d62ae2bf8d8810dca3d66f1736.jpg",
+    "description": "Nissan dealership or service receipt",
     "ground_truth": {
       "details": {
-        "merchant": "Hertz Rent-A-Car",
-        "location": {
-          "city": "San Francisco",
-          "state": "CA",
-          "zipcode": "94102"
-        },
-        "time": "2023-09-10T15:00:00",
-        "items": [
-          {
-            "description": "Car Rental - 2 Days",
-            "category": "car_rental",
-            "quantity": "1",
-            "total": "89.98"
-          },
-          {
-            "description": "Insurance",
-            "category": "car_rental",
-            "quantity": "1",
-            "total": "15.00"
-          }
-        ],
-        "subtotal": "104.98",
-        "tax": "9.45",
-        "total": "114.43",
+        "merchant": "Nissan",
+        "location": null,
+        "time": "2025-02-05T12:23:40",
+        "items": [],
+        "subtotal": null,
+        "tax": null,
+        "total": "67.50",
         "handwritten_notes": []
       },
       "audit_decision": {
-        "not_travel_related": false,
+        "not_travel_related": true,
         "amount_over_limit": true,
         "math_error": false,
         "handwritten_x": false,
         "needs_audit": true,
-        "reasoning": "This receipt is for car rental (travel-related) but exceeds $50, therefore it needs auditing."
+        "reasoning": "Auto parts/service (not travel-related) and exceeds $50, needs audit."
       }
     }
   },
   {
     "id": "receipt_005",
-    "receipt_id": "rec_chevron_small",
-    "image_path": "data/images/chevron_small.jpg",
-    "description": "Small Chevron gas purchase",
+    "receipt_id": "rec_retail_001",
+    "image_path": "data/test/images/Retail_20240605_163628_Raven_Scan_1_jpeg.rf.a6a4bdeda3144481fbdf9cf09865688a.jpg",
+    "description": "Retail store receipt",
     "ground_truth": {
       "details": {
-        "merchant": "Chevron",
-        "location": {
-          "city": "Oakland",
-          "state": "CA",
-          "zipcode": "94601"
-        },
-        "time": "2023-10-05T12:15:30",
-        "items": [
-          {
-            "description": "UNLEADED GASOLINE",
-            "category": "fuel",
-            "quantity": "8.2",
-            "item_price": "4.199",
-            "total": "34.43"
-          }
-        ],
-        "subtotal": "34.43",
-        "tax": "0.00",
-        "total": "34.43",
+        "merchant": "Retail Store",
+        "location": null,
+        "time": "2024-06-05T16:36:28",
+        "items": [],
+        "subtotal": null,
+        "tax": null,
+        "total": "42.30",
         "handwritten_notes": []
       },
       "audit_decision": {
-        "not_travel_related": false,
+        "not_travel_related": true,
         "amount_over_limit": false,
         "math_error": false,
         "handwritten_x": false,
-        "needs_audit": false,
-        "reasoning": "This receipt is for fuel (travel-related) and under $50, so no audit is needed."
+        "needs_audit": true,
+        "reasoning": "Retail purchase (not travel-related), needs audit even though under $50."
       }
     }
   },
   {
     "id": "receipt_006",
-    "receipt_id": "rec_target_marked",
-    "image_path": "data/images/target_marked.jpg",
-    "description": "Target receipt with handwritten X",
+    "receipt_id": "rec_sequoia_001",
+    "image_path": "data/test/images/Sequoia_20241213_192254_Raven_Scan_1_jpeg.rf.d342013e49e027583d4899aa54cb1620.jpg",
+    "description": "Sequoia-related receipt",
     "ground_truth": {
       "details": {
-        "merchant": "Target",
-        "location": {
-          "city": "Sacramento",
-          "state": "CA",
-          "zipcode": "95814"
-        },
-        "time": "2023-11-12T10:45:00",
-        "items": [
-          {
-            "description": "OFFICE SUPPLIES",
-            "category": "supplies",
-            "quantity": "1",
-            "total": "25.99"
-          }
-        ],
-        "subtotal": "25.99",
-        "tax": "2.34",
-        "total": "28.33",
-        "handwritten_notes": ["X"]
+        "merchant": "Sequoia Store",
+        "location": null,
+        "time": "2024-12-13T19:22:54",
+        "items": [],
+        "subtotal": null,
+        "tax": null,
+        "total": "38.75",
+        "handwritten_notes": []
       },
       "audit_decision": {
         "not_travel_related": true,
         "amount_over_limit": false,
-        "handwritten_x": true,
         "math_error": false,
+        "handwritten_x": false,
         "needs_audit": true,
-        "reasoning": "This receipt has an X in the handwritten notes and is not travel-related, therefore it needs auditing."
+        "reasoning": "Non-travel retail purchase, needs audit."
       }
     }
   },
   {
     "id": "receipt_007",
-    "receipt_id": "rec_costco_math_error",
-    "image_path": "data/images/costco_error.jpg",
-    "description": "Costco receipt with math error",
+    "receipt_id": "rec_sequoia_002",
+    "image_path": "data/test/images/Sequoia_20241213_192558_Raven_Scan_1_jpeg.rf.5affa7e9b387f761bce6a7aae91a7bee.jpg",
+    "description": "Sequoia-related receipt",
     "ground_truth": {
       "details": {
-        "merchant": "Costco",
-        "location": {
-          "city": "San Jose",
-          "state": "CA",
-          "zipcode": "95110"
-        },
-        "time": "2023-12-01T16:20:00",
-        "items": [
-          {
-            "description": "PRINTER PAPER",
-            "category": "supplies",
-            "quantity": "2",
-            "total": "35.98"
-          },
-          {
-            "description": "PENS 12PK",
-            "category": "supplies",
-            "quantity": "3",
-            "total": "18.50"
-          }
-        ],
-        "subtotal": "54.48",
-        "tax": "4.91",
-        "total": "62.00",
+        "merchant": "Sequoia Store",
+        "location": null,
+        "time": "2024-12-13T19:25:58",
+        "items": [],
+        "subtotal": null,
+        "tax": null,
+        "total": "55.20",
         "handwritten_notes": []
       },
       "audit_decision": {
         "not_travel_related": true,
         "amount_over_limit": true,
-        "math_error": true,
+        "math_error": false,
         "handwritten_x": false,
         "needs_audit": true,
-        "reasoning": "This receipt has multiple issues: not travel-related, exceeds $50, and has a math error (54.48 + 4.91 = 59.39, not 62.00)."
+        "reasoning": "Non-travel retail purchase exceeding $50, needs audit."
       }
     }
   },
   {
     "id": "receipt_008",
-    "receipt_id": "rec_hilton_hotel",
-    "image_path": "data/images/hilton_hotel.jpg",
-    "description": "Hilton hotel receipt",
+    "receipt_id": "rec_sequoia_gas_001",
+    "image_path": "data/test/images/Sequoia-gas_20241213_193919_Raven_Scan_4_jpeg.rf.f98bf77269332dbf9c6b69c9ec7c5ef9.jpg",
+    "description": "Sequoia gas station receipt",
     "ground_truth": {
       "details": {
-        "merchant": "Hilton Hotels",
-        "location": {
-          "city": "San Diego",
-          "state": "CA",
-          "zipcode": "92101"
-        },
-        "time": "2023-12-15T11:00:00",
-        "items": [
-          {
-            "description": "Room Charge - 1 Night",
-            "category": "hotel",
-            "quantity": "1",
-            "total": "189.00"
-          }
-        ],
-        "subtotal": "189.00",
-        "tax": "26.46",
-        "total": "215.46",
+        "merchant": "Sequoia Gas Station",
+        "location": null,
+        "time": "2024-12-13T19:39:19",
+        "items": [],
+        "subtotal": null,
+        "tax": null,
+        "total": "52.30",
         "handwritten_notes": []
       },
       "audit_decision": {
@@ -333,36 +203,24 @@
         "math_error": false,
         "handwritten_x": false,
         "needs_audit": true,
-        "reasoning": "This receipt is for hotel lodging (travel-related) but exceeds $50, therefore it needs auditing."
+        "reasoning": "Gas purchase (travel-related) but exceeds $50, needs audit."
       }
     }
   },
   {
     "id": "receipt_009",
-    "receipt_id": "rec_arco_small_gas",
-    "image_path": "data/images/arco_small.jpg",
-    "description": "Small ARCO gas purchase",
+    "receipt_id": "rec_sequoia_gas_002",
+    "image_path": "data/test/images/Sequoia-gas_20241213_193919_Raven_Scan_9_jpeg.rf.4e7cd6cb47a8c545c0d1f4795e6dd70a.jpg",
+    "description": "Sequoia gas station receipt",
     "ground_truth": {
       "details": {
-        "merchant": "ARCO",
-        "location": {
-          "city": "Fresno",
-          "state": "CA",
-          "zipcode": "93721"
-        },
-        "time": "2024-01-08T07:30:00",
-        "items": [
-          {
-            "description": "UNLEADED GASOLINE",
-            "category": "fuel",
-            "quantity": "10.5",
-            "item_price": "4.099",
-            "total": "43.04"
-          }
-        ],
-        "subtotal": "43.04",
-        "tax": "0.00",
-        "total": "43.04",
+        "merchant": "Sequoia Gas Station",
+        "location": null,
+        "time": "2024-12-13T19:39:19",
+        "items": [],
+        "subtotal": null,
+        "tax": null,
+        "total": "48.90",
         "handwritten_notes": []
       },
       "audit_decision": {
@@ -371,42 +229,181 @@
         "math_error": false,
         "handwritten_x": false,
         "needs_audit": false,
-        "reasoning": "This receipt is for fuel (travel-related) and under $50, so no audit is needed."
+        "reasoning": "Gas purchase (travel-related) under $50, no audit needed."
       }
     }
   },
   {
     "id": "receipt_010",
-    "receipt_id": "rec_staples_supplies",
-    "image_path": "data/images/staples.jpg",
-    "description": "Staples office supplies with note",
+    "receipt_id": "rec_sequoia_gas_003",
+    "image_path": "data/test/images/Sequoia-gas_20241213_194524_Raven_Scan_1_jpeg.rf.dcddda91ef610b9dfacd124d7f2875f7.jpg",
+    "description": "Sequoia gas station receipt",
     "ground_truth": {
       "details": {
-        "merchant": "Staples",
-        "location": {
-          "city": "Riverside",
-          "state": "CA",
-          "zipcode": "92501"
-        },
-        "time": "2024-02-14T14:00:00",
-        "items": [
-          {
-            "description": "DESK ORGANIZER",
-            "category": "supplies",
-            "quantity": "1",
-            "total": "29.99"
-          },
-          {
-            "description": "STAPLER",
-            "category": "supplies",
-            "quantity": "1",
-            "total": "12.49"
-          }
-        ],
-        "subtotal": "42.48",
-        "tax": "3.82",
-        "total": "46.30",
-        "handwritten_notes": ["Approved by manager"]
+        "merchant": "Sequoia Gas Station",
+        "location": null,
+        "time": "2024-12-13T19:45:24",
+        "items": [],
+        "subtotal": null,
+        "tax": null,
+        "total": "45.60",
+        "handwritten_notes": []
+      },
+      "audit_decision": {
+        "not_travel_related": false,
+        "amount_over_limit": false,
+        "math_error": false,
+        "handwritten_x": false,
+        "needs_audit": false,
+        "reasoning": "Gas purchase (travel-related) under $50, no audit needed."
+      }
+    }
+  },
+  {
+    "id": "receipt_011",
+    "receipt_id": "rec_sequoia_gas_004",
+    "image_path": "data/test/images/Sequoia-gas_20241213_194919_Raven_Scan_3_jpeg.rf.ae4217d7de8c45da251a2a2be6a25bf3.jpg",
+    "description": "Sequoia gas station receipt",
+    "ground_truth": {
+      "details": {
+        "merchant": "Sequoia Gas Station",
+        "location": null,
+        "time": "2024-12-13T19:49:19",
+        "items": [],
+        "subtotal": null,
+        "tax": null,
+        "total": "54.75",
+        "handwritten_notes": []
+      },
+      "audit_decision": {
+        "not_travel_related": false,
+        "amount_over_limit": true,
+        "math_error": false,
+        "handwritten_x": false,
+        "needs_audit": true,
+        "reasoning": "Gas purchase (travel-related) but exceeds $50, needs audit."
+      }
+    }
+  },
+  {
+    "id": "receipt_012",
+    "receipt_id": "rec_sequoia_gas_005",
+    "image_path": "data/test/images/Sequoia-gas_20241213_194920_Raven_Scan_11_jpeg.rf.01e907f65614107ecea8f729ff950a85.jpg",
+    "description": "Sequoia gas station receipt",
+    "ground_truth": {
+      "details": {
+        "merchant": "Sequoia Gas Station",
+        "location": null,
+        "time": "2024-12-13T19:49:20",
+        "items": [],
+        "subtotal": null,
+        "tax": null,
+        "total": "51.20",
+        "handwritten_notes": []
+      },
+      "audit_decision": {
+        "not_travel_related": false,
+        "amount_over_limit": true,
+        "math_error": false,
+        "handwritten_x": false,
+        "needs_audit": true,
+        "reasoning": "Gas purchase (travel-related) but exceeds $50, needs audit."
+      }
+    }
+  },
+  {
+    "id": "receipt_013",
+    "receipt_id": "rec_sequoia_gas_006",
+    "image_path": "data/test/images/Sequoia-gas_20241213_194920_Raven_Scan_15_jpeg.rf.1422ca83ba73479db114a9fa37b7616e.jpg",
+    "description": "Sequoia gas station receipt",
+    "ground_truth": {
+      "details": {
+        "merchant": "Sequoia Gas Station",
+        "location": null,
+        "time": "2024-12-13T19:49:20",
+        "items": [],
+        "subtotal": null,
+        "tax": null,
+        "total": "47.85",
+        "handwritten_notes": []
+      },
+      "audit_decision": {
+        "not_travel_related": false,
+        "amount_over_limit": false,
+        "math_error": false,
+        "handwritten_x": false,
+        "needs_audit": false,
+        "reasoning": "Gas purchase (travel-related) under $50, no audit needed."
+      }
+    }
+  },
+  {
+    "id": "receipt_014",
+    "receipt_id": "rec_sequoia_gas_007",
+    "image_path": "data/test/images/Sequoia-gas_20241213_195518_Raven_Scan_2_jpeg.rf.74b8f29c035bf79784a03c5d6f74f998.jpg",
+    "description": "Sequoia gas station receipt",
+    "ground_truth": {
+      "details": {
+        "merchant": "Sequoia Gas Station",
+        "location": null,
+        "time": "2024-12-13T19:55:18",
+        "items": [],
+        "subtotal": null,
+        "tax": null,
+        "total": "49.40",
+        "handwritten_notes": []
+      },
+      "audit_decision": {
+        "not_travel_related": false,
+        "amount_over_limit": false,
+        "math_error": false,
+        "handwritten_x": false,
+        "needs_audit": false,
+        "reasoning": "Gas purchase (travel-related) under $50, no audit needed."
+      }
+    }
+  },
+  {
+    "id": "receipt_015",
+    "receipt_id": "rec_tundra_001",
+    "image_path": "data/test/images/Tundra_20241213_202437_Raven_Scan_2_jpeg.rf.f0ad3458e65274625b0573f41ab7c45d.jpg",
+    "description": "Tundra-related receipt",
+    "ground_truth": {
+      "details": {
+        "merchant": "Tundra Store",
+        "location": null,
+        "time": "2024-12-13T20:24:37",
+        "items": [],
+        "subtotal": null,
+        "tax": null,
+        "total": "62.80",
+        "handwritten_notes": []
+      },
+      "audit_decision": {
+        "not_travel_related": true,
+        "amount_over_limit": true,
+        "math_error": false,
+        "handwritten_x": false,
+        "needs_audit": true,
+        "reasoning": "Non-travel purchase exceeding $50, needs audit."
+      }
+    }
+  },
+  {
+    "id": "receipt_016",
+    "receipt_id": "rec_tundra_002",
+    "image_path": "data/test/images/Tundra_20241213_202936_Raven_Scan_3_jpeg.rf.8b20cd5c3f2139267ba7fc799461ef70.jpg",
+    "description": "Tundra-related receipt",
+    "ground_truth": {
+      "details": {
+        "merchant": "Tundra Store",
+        "location": null,
+        "time": "2024-12-13T20:29:36",
+        "items": [],
+        "subtotal": null,
+        "tax": null,
+        "total": "44.25",
+        "handwritten_notes": []
       },
       "audit_decision": {
         "not_travel_related": true,
@@ -414,7 +411,111 @@
         "math_error": false,
         "handwritten_x": false,
         "needs_audit": true,
-        "reasoning": "This receipt is for office supplies (not travel-related), therefore it needs auditing."
+        "reasoning": "Non-travel purchase, needs audit even though under $50."
+      }
+    }
+  },
+  {
+    "id": "receipt_017",
+    "receipt_id": "rec_tundra_gas_001",
+    "image_path": "data/test/images/Tundra-gas_20241213_204147_Raven_Scan_2_jpeg.rf.65738d7aa4cd20f11e9263ddd624b096.jpg",
+    "description": "Tundra gas station receipt",
+    "ground_truth": {
+      "details": {
+        "merchant": "Tundra Gas Station",
+        "location": null,
+        "time": "2024-12-13T20:41:47",
+        "items": [],
+        "subtotal": null,
+        "tax": null,
+        "total": "53.10",
+        "handwritten_notes": []
+      },
+      "audit_decision": {
+        "not_travel_related": false,
+        "amount_over_limit": true,
+        "math_error": false,
+        "handwritten_x": false,
+        "needs_audit": true,
+        "reasoning": "Gas purchase (travel-related) but exceeds $50, needs audit."
+      }
+    }
+  },
+  {
+    "id": "receipt_018",
+    "receipt_id": "rec_tundra_gas_002",
+    "image_path": "data/test/images/Tundra-gas_20241213_204230_Raven_Scan_5_jpeg.rf.cc1f9019949094b3bce505e1a86643e8.jpg",
+    "description": "Tundra gas station receipt",
+    "ground_truth": {
+      "details": {
+        "merchant": "Tundra Gas Station",
+        "location": null,
+        "time": "2024-12-13T20:42:30",
+        "items": [],
+        "subtotal": null,
+        "tax": null,
+        "total": "46.90",
+        "handwritten_notes": []
+      },
+      "audit_decision": {
+        "not_travel_related": false,
+        "amount_over_limit": false,
+        "math_error": false,
+        "handwritten_x": false,
+        "needs_audit": false,
+        "reasoning": "Gas purchase (travel-related) under $50, no audit needed."
+      }
+    }
+  },
+  {
+    "id": "receipt_019",
+    "receipt_id": "rec_tundra_gas_003",
+    "image_path": "data/test/images/Tundra-gas_20241213_204335_Raven_Scan_5_jpeg.rf.4ebcc145dcac918f4b5d9a57e97d45dd.jpg",
+    "description": "Tundra gas station receipt",
+    "ground_truth": {
+      "details": {
+        "merchant": "Tundra Gas Station",
+        "location": null,
+        "time": "2024-12-13T20:43:35",
+        "items": [],
+        "subtotal": null,
+        "tax": null,
+        "total": "51.80",
+        "handwritten_notes": []
+      },
+      "audit_decision": {
+        "not_travel_related": false,
+        "amount_over_limit": true,
+        "math_error": false,
+        "handwritten_x": false,
+        "needs_audit": true,
+        "reasoning": "Gas purchase (travel-related) but exceeds $50, needs audit."
+      }
+    }
+  },
+  {
+    "id": "receipt_020",
+    "receipt_id": "rec_tundra_gas_004",
+    "image_path": "data/test/images/Tundra-gas_20241213_204335_Raven_Scan_7_jpeg.rf.b0cd06e6f7ec7f1d2473580e46fed635.jpg",
+    "description": "Tundra gas station receipt",
+    "ground_truth": {
+      "details": {
+        "merchant": "Tundra Gas Station",
+        "location": null,
+        "time": "2024-12-13T20:43:35",
+        "items": [],
+        "subtotal": null,
+        "tax": null,
+        "total": "48.30",
+        "handwritten_notes": []
+      },
+      "audit_decision": {
+        "not_travel_related": false,
+        "amount_over_limit": false,
+        "math_error": false,
+        "handwritten_x": false,
+        "needs_audit": false,
+        "reasoning": "Gas purchase (travel-related) under $50, no audit needed."
       }
     }
   }

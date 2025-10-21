@@ -14,30 +14,35 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from agent_sdk.agents.receipt_inspection import ReceiptInspectionAgent
 from agent_sdk.utils.config import Config
+from agent_sdk.utils.langfuse_check import require_langfuse
 
 console = Console()
 
 
 async def main():
     """Run receipt inspection example."""
+    # Require Langfuse to be available
+    require_langfuse()
+
     # Initialize config and agent
     config = Config()
     agent = ReceiptInspectionAgent(config=config)
 
     console.print("[bold cyan]Receipt Inspection Agent Demo[/bold cyan]\n")
 
-    # Example: Process a simulated receipt
-    # In a real scenario, you would provide an actual image path
-    example_image_path = "data/images/walmart_supplies.jpg"
+    # Example: Process a receipt from the Roboflow test set
+    example_image_path = "data/test/images/Gas_20240605_164059_Raven_Scan_3_jpeg.rf.a02f4219788648c9533c802f98d68ed7.jpg"
+    from datetime import datetime
+    receipt_id = f"example_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
     console.print(f"[yellow]Processing receipt image:[/yellow] {example_image_path}\n")
 
     try:
-        # Extract receipt details
-        console.print("[bold]Step 1: Extracting receipt details...[/bold]")
-        receipt_details = await agent.extract_receipt_details(
+        # Use the process_receipt method which automatically nests both operations
+        console.print("[bold]Processing receipt (extract + audit)...[/bold]")
+        receipt_details, audit_decision = await agent.process_receipt(
             image_path=example_image_path,
-            receipt_id="example_001"
+            receipt_id=receipt_id
         )
 
         # Display extraction results
@@ -45,10 +50,6 @@ async def main():
         console.print("[bold]Extracted Details:[/bold]")
         print(receipt_details.model_dump_json(indent=2))
         console.print()
-
-        # Make audit decision
-        console.print("[bold]Step 2: Evaluating for audit...[/bold]")
-        audit_decision = await agent.evaluate_receipt_for_audit(receipt_details)
 
         # Display audit decision
         console.print("[green]Audit evaluation complete![/green]\n")
@@ -77,7 +78,12 @@ async def main():
             console.print(f"[dim]Model: {audit_decision.metadata['model']}[/dim]")
 
         console.print("\n[green]✓ Receipt inspection complete![/green]")
-        console.print("[yellow]→ View traces in Langfuse: http://localhost:3200[/yellow]\n")
+        console.print(f"[yellow]→ Session ID: {receipt_id}[/yellow]")
+        console.print("[yellow]→ View traces in Langfuse: http://localhost:3000[/yellow]\n")
+
+        # Flush Langfuse to ensure all traces are sent
+        from langfuse.decorators import langfuse_context
+        langfuse_context.flush()
 
     except FileNotFoundError:
         console.print(f"[red]Error: Image file not found: {example_image_path}[/red]")

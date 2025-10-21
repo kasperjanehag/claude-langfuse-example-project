@@ -19,6 +19,8 @@ from agent_sdk.evals.metrics import (
     ExtractionAccuracyMetric,
 )
 from agent_sdk.utils.config import Config
+from agent_sdk.utils.langfuse_check import require_langfuse
+from agent_sdk.utils.langfuse_datasets import LangfuseDatasetManager
 
 console = Console()
 
@@ -121,6 +123,9 @@ async def evaluate_receipt(
 
 async def main():
     """Run evaluation on all receipt test cases."""
+    # Require Langfuse to be available
+    require_langfuse()
+
     console.print("[bold cyan]Receipt Inspection Evaluation[/bold cyan]\n")
 
     # Load test cases
@@ -133,7 +138,16 @@ async def main():
     with open(test_cases_path) as f:
         test_cases = json.load(f)
 
-    console.print(f"[yellow]Loaded {len(test_cases)} test cases[/yellow]\n")
+    console.print(f"[yellow]Loaded {len(test_cases)} test cases[/yellow]")
+
+    # Initialize Langfuse dataset manager
+    try:
+        dataset_manager = LangfuseDatasetManager()
+        console.print("[dim]Langfuse dataset integration enabled[/dim]\n")
+    except Exception as e:
+        console.print(f"[yellow]Warning: Langfuse dataset not available: {str(e)}[/yellow]")
+        console.print("[dim]Run 'python examples/setup_langfuse_dataset.py' to create the dataset[/dim]\n")
+        dataset_manager = None
 
     # Initialize agent and metrics
     config = Config()
@@ -215,7 +229,7 @@ async def main():
                         )
 
     console.print("\n[green]✓ Evaluation complete![/green]")
-    console.print("[yellow]→ View detailed traces in Langfuse: http://localhost:3200[/yellow]\n")
+    console.print("[yellow]→ View detailed traces in Langfuse: http://localhost:3000[/yellow]\n")
 
     # Save results
     results_dir = Path("eval_results")

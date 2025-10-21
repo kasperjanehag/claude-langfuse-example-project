@@ -14,14 +14,22 @@ This project showcases how to build, evaluate, and iterate on AI agent systems u
 
 Based on principles from the [OpenAI Cookbook's Eval-Driven System Design guide](https://cookbook.openai.com/examples/partners/eval_driven_system_design/receipt_inspection) and [Hamel Husain and Shreya Shankar's guide to building eval systems](https://www.lennysnewsletter.com/p/building-eval-systems-that-improve).
 
+## 📚 Documentation
+
+- **[docs/CHANGES.md](docs/CHANGES.md)** - Summary of recent updates and improvements
+- **[docs/IMPLEMENTATION_NOTES.md](docs/IMPLEMENTATION_NOTES.md)** - Technical details and architecture decisions
+- **[docs/TESTING_GUIDE.md](docs/TESTING_GUIDE.md)** - Step-by-step testing instructions
+- **[data/images/README.md](data/images/README.md)** - How to obtain receipt images for testing
+
 ## Features
 
 ### Agent System
 - **Receipt Inspection Agent** with vision-based data extraction
 - Automated audit decision making based on configurable criteria
 - Powered by Claude 3.5 Sonnet with vision capabilities
-- Structured outputs with reasoning traces
-- Full Langfuse observability integration
+- **Structured outputs** using Claude's tool use feature for reliable parsing
+- Full Langfuse observability integration with dataset versioning
+- Comprehensive evaluation metrics aligned with business KPIs
 
 ### Use Case: Receipt Parsing and Audit Decisions
 
@@ -113,11 +121,11 @@ docker compose up -d
 docker compose logs -f langfuse-web
 
 # When you see "Ready", Langfuse is running
-# Access UI at http://localhost:3200
+# Access UI at http://localhost:3000
 ```
 
 **First-time setup in Langfuse UI**:
-1. Navigate to http://localhost:3200
+1. Navigate to http://localhost:3000
 2. Create your account
 3. Create a new project
 4. Go to Settings → API Keys
@@ -135,7 +143,22 @@ cp .env.example .env
 # - LANGFUSE_SECRET_KEY (from Langfuse UI)
 ```
 
-### 4. Run Examples
+### 4. Set Up Langfuse Dataset (Optional but Recommended)
+
+```bash
+# Create the receipt inspection dataset in Langfuse
+python examples/setup_langfuse_dataset.py
+```
+
+This will:
+- Load test cases from `data/datasets/receipt_test_cases.json`
+- Create a dataset named "receipt_inspection_v1" in Langfuse
+- Add all 20 test cases as dataset items from the Roboflow dataset
+- Enable tracking of evaluation runs against versioned test data
+
+**Note**: This project uses the [Roboflow Receipt Handwriting Detection dataset](https://universe.roboflow.com/newreceipts/receipt-handwriting-detection) (CC BY 4.0). See `data/images/README.md` for details.
+
+### 5. Run Examples
 
 **Process a Single Receipt**:
 ```bash
@@ -154,7 +177,8 @@ python examples/run_receipt_evaluation.py
 ```
 
 The evaluation will:
-- Process all 10 test cases from `data/datasets/receipt_test_cases.json`
+- Process all 20 test cases from `data/datasets/receipt_test_cases.json`
+- Use images from the Roboflow dataset in `data/test/images/`
 - Evaluate each receipt using 3 metrics:
   - Audit Decision Correctness (most critical)
   - Audit Criteria Accuracy
@@ -163,10 +187,7 @@ The evaluation will:
 - Save detailed results to `eval_results/`
 - Track all traces in Langfuse
 
-**Note**: The example scripts expect receipt images in `data/images/`. The repository includes test case definitions but not the actual images. You can:
-- Add your own receipt images
-- Modify the test cases to point to your images
-- Use the structure as a template for your own receipt processing system
+**Note**: The evaluation uses the 20 test images from the Roboflow dataset located in `data/test/images/`. The test cases include gas station receipts, retail stores, and auto service receipts with varying amounts and categories.
 
 ## Eval-Driven Development Workflow
 
@@ -213,11 +234,11 @@ Create test cases that represent real receipt scenarios:
 }
 ```
 
-See `data/datasets/receipt_test_cases.json` for 10 example test cases covering:
-- Travel expenses (gas, hotel, car rental)
-- Non-travel expenses (office supplies, food)
-- Edge cases (math errors, handwritten marks)
+See `data/datasets/receipt_test_cases.json` for 20 test cases from the Roboflow dataset covering:
+- Travel expenses (12 gas station receipts)
+- Non-travel expenses (retail stores, auto services)
 - Various amounts (under/over $50 threshold)
+- Real-world receipt images with handwriting detection labels
 
 ### 3. Run Evaluations
 
@@ -235,7 +256,7 @@ This produces:
 ### 4. Analyze and Iterate
 
 1. **Review failures** in the console output
-2. **Examine traces** in Langfuse (http://localhost:3200)
+2. **Examine traces** in Langfuse (http://localhost:3000)
 3. **Identify patterns**: Are failures in specific categories?
 4. **Make improvements**:
    - Update prompts
@@ -273,7 +294,7 @@ Metric Averages
 
 ### Viewing Traces
 
-1. Go to http://localhost:3200
+1. Go to http://localhost:3000
 2. Navigate to "Traces"
 3. Click on any trace to see:
    - Full prompt and completion
@@ -494,6 +515,29 @@ docker compose logs langfuse-db
 # Restart services
 docker compose restart
 ```
+
+### Wrong Port Error (3000 vs 3200)
+
+**Symptom**: Script fails with "Langfuse service not reachable at http://localhost:3000" even though Langfuse is running on port 3200.
+
+**Cause**: Shell environment variable `LANGFUSE_HOST` is overriding the `.env` file value.
+
+**Solution**:
+```bash
+# Check if environment variable is set
+echo $LANGFUSE_HOST
+
+# If it shows http://localhost:3000, fix it:
+export LANGFUSE_HOST=http://localhost:3000
+
+# Or unset it to use .env value
+unset LANGFUSE_HOST
+
+# To permanently fix, check your shell profile
+# (~/.bashrc, ~/.zshrc) and remove/update LANGFUSE_HOST exports
+```
+
+**Note**: Pydantic settings give priority to environment variables over `.env` files.
 
 ### API Key Errors
 

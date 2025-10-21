@@ -1,16 +1,17 @@
 """Receipt inspection agent implementation."""
 
 import base64
+import json
 import mimetypes
 import uuid
 from pathlib import Path
 from typing import Optional
 
-from anthropic import Anthropic
+from openai import OpenAI
 from langfuse.decorators import langfuse_context, observe
 
 from agent_sdk.utils.config import Config
-from agent_sdk.utils.models import AuditDecision, ReceiptDetails
+from agent_sdk.utils.models import AuditDecision, LineItem, Location, ReceiptDetails
 
 
 class ReceiptInspectionAgent:
@@ -32,10 +33,105 @@ class ReceiptInspectionAgent:
             config: Application configuration
         """
         self.config = config or Config()
-        self.client = Anthropic(
-            api_key=self.config.anthropic_api_key,
-            base_url=self.config.anthropic_base_url,
+        self.client = OpenAI(
+            api_key=self.config.openai_api_key,
+            base_url=self.config.openai_base_url,
         )
+
+    def _get_receipt_details_tool(self):
+        """Get the tool definition for extracting receipt details."""
+        return {
+            "type": "function",
+            "function": {
+                "name": "extract_receipt_data",
+                "description": "Extract structured data from a receipt image including merchant, items, amounts, and handwritten notes",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "merchant": {
+                            "type": "string",
+                            "description": "Name of the merchant/store"
+                        },
+                        "location": {
+                            "type": "object",
+                            "properties": {
+                                "city": {"type": "string"},
+                                "state": {"type": "string"},
+                                "zipcode": {"type": "string"}
+                            }
+                        },
+                        "time": {
+                            "type": "string",
+                            "description": "Date and time in ISO format (YYYY-MM-DDTHH:MM:SS)"
+                        },
+                        "items": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "description": {"type": "string"},
+                                    "product_code": {"type": "string"},
+                                    "category": {"type": "string", "description": "e.g., fuel, hotel, food, supplies"},
+                                    "item_price": {"type": "string"},
+                                    "sale_price": {"type": "string"},
+                                    "quantity": {"type": "string"},
+                                    "total": {"type": "string"}
+                                }
+                            }
+                        },
+                        "subtotal": {"type": "string"},
+                        "tax": {"type": "string"},
+                        "total": {"type": "string"},
+                        "handwritten_notes": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "List of any handwritten notes or annotations"
+                        }
+                    },
+                    "required": ["merchant", "items", "handwritten_notes"]
+                }
+            }
+        }
+
+    def _get_audit_decision_tool(self):
+        """Get the tool definition for making audit decisions."""
+        return {
+            "type": "function",
+            "function": {
+                "name": "make_audit_decision",
+                "description": "Evaluate a receipt and determine if it needs auditing based on defined criteria",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "not_travel_related": {
+                            "type": "boolean",
+                            "description": "True if receipt is NOT for travel expenses (gas, hotel, airfare, car rental)"
+                        },
+                        "amount_over_limit": {
+                            "type": "boolean",
+                            "description": "True if total amount exceeds $50"
+                        },
+                        "math_error": {
+                            "type": "boolean",
+                            "description": "True if line items + tax don't sum correctly to total"
+                        },
+                        "handwritten_x": {
+                            "type": "boolean",
+                            "description": "True if there is an 'X' in handwritten notes"
+                        },
+                        "reasoning": {
+                            "type": "string",
+                            "description": "Detailed explanation for the audit decision"
+                        },
+                        "needs_audit": {
+                            "type": "boolean",
+                            "description": "Final determination - true if ANY criterion is violated"
+                        }
+                    },
+                    "required": ["not_travel_related", "amount_over_limit", "math_error", "handwritten_x", "reasoning", "needs_audit"]
+                }
+            }
+        }
 
     @observe(name="extract_receipt_details")
     async def extract_receipt_details(
@@ -102,43 +198,56 @@ Carefully examine the receipt image and identify the following key information:
 Your response should be structured and complete, capturing all available information from the receipt."""
 
         try:
-            message = self.client.messages.create(
-                model=self.config.model,
-                max_tokens=self.config.max_tokens,
-                messages=[
-                    {
-                        "role": "user",
-                        "content": [
-                            {"type": "text", "text": extraction_prompt},
-                            {
-                                "type": "image",
-                                "source": {
-                                    "type": "base64",
-                                    "media_type": mime_type,
-                                    "data": b64_image,
-                                },
+            # Prepare messages with image for API call (OpenAI ChatML format)
+            messages_payload = [
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": extraction_prompt},
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:{mime_type};base64,{b64_image}"
                             },
-                        ],
-                    }
-                ],
+                        },
+                    ],
+                }
+            ]
+
+            # Use function calling for structured outputs
+            response = self.client.chat.completions.create(
+                model=self.config.model,
+                max_completion_tokens=self.config.max_tokens,
+                tools=[self._get_receipt_details_tool()],
+                tool_choice={"type": "function", "function": {"name": "extract_receipt_data"}},
+                messages=messages_payload,
             )
 
-            # Parse the response - Claude will return structured text
-            response_text = message.content[0].text
-
-            # Track token usage
+            # Log input/output and token usage to Langfuse
+            # Langfuse automatically detects and handles base64 images in data URIs
             langfuse_context.update_current_observation(
+                input=messages_payload,
+                output=response.model_dump(),
                 usage={
-                    "input": message.usage.input_tokens,
-                    "output": message.usage.output_tokens,
-                    "total": message.usage.input_tokens + message.usage.output_tokens,
+                    "input": response.usage.prompt_tokens,
+                    "output": response.usage.completion_tokens,
+                    "total": response.usage.total_tokens,
                 }
             )
 
-            # For now, we'll return a placeholder structure
-            # In production, you'd want to use structured outputs or parse the response
-            receipt_details = self._parse_receipt_details(
-                response_text, receipt_id, message.usage.input_tokens, message.usage.output_tokens
+            # Extract tool call from response
+            message = response.choices[0].message
+            if not message.tool_calls or len(message.tool_calls) == 0:
+                raise ValueError("No tool calls found in OpenAI's response")
+
+            tool_call = message.tool_calls[0]
+            if tool_call.function.name != "extract_receipt_data":
+                raise ValueError(f"Expected extract_receipt_data, got {tool_call.function.name}")
+
+            # Parse the function arguments into ReceiptDetails
+            function_args = json.loads(tool_call.function.arguments)
+            receipt_details = self._parse_receipt_details_from_tool(
+                function_args, receipt_id, response.usage.prompt_tokens, response.usage.completion_tokens
             )
 
             return receipt_details
@@ -197,41 +306,56 @@ Return a structured response with:
         receipt_json = receipt_details.model_dump_json(indent=2)
 
         try:
-            message = self.client.messages.create(
+            # Prepare messages for API call
+            messages_payload = [
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": audit_prompt},
+                        {
+                            "type": "text",
+                            "text": f"Receipt details:\n{receipt_json}",
+                        },
+                    ],
+                }
+            ]
+
+            # Use function calling for structured outputs
+            response = self.client.chat.completions.create(
                 model=self.config.model,
-                max_tokens=self.config.max_tokens,
-                temperature=0,  # Use 0 for more deterministic decisions
-                messages=[
-                    {
-                        "role": "user",
-                        "content": [
-                            {"type": "text", "text": audit_prompt},
-                            {
-                                "type": "text",
-                                "text": f"Receipt details:\n{receipt_json}",
-                            },
-                        ],
-                    }
-                ],
+                max_completion_tokens=self.config.max_tokens,
+                tools=[self._get_audit_decision_tool()],
+                tool_choice={"type": "function", "function": {"name": "make_audit_decision"}},
+                messages=messages_payload,
             )
 
-            response_text = message.content[0].text
-
-            # Track token usage
+            # Log input/output and token usage to Langfuse
             langfuse_context.update_current_observation(
+                input=messages_payload,
+                output=response.model_dump(),
                 usage={
-                    "input": message.usage.input_tokens,
-                    "output": message.usage.output_tokens,
-                    "total": message.usage.input_tokens + message.usage.output_tokens,
+                    "input": response.usage.prompt_tokens,
+                    "output": response.usage.completion_tokens,
+                    "total": response.usage.total_tokens,
                 }
             )
 
-            # Parse the audit decision
-            audit_decision = self._parse_audit_decision(
-                response_text,
+            # Extract tool call from response
+            message = response.choices[0].message
+            if not message.tool_calls or len(message.tool_calls) == 0:
+                raise ValueError("No tool calls found in OpenAI's response")
+
+            tool_call = message.tool_calls[0]
+            if tool_call.function.name != "make_audit_decision":
+                raise ValueError(f"Expected make_audit_decision, got {tool_call.function.name}")
+
+            # Parse the audit decision from function arguments
+            function_args = json.loads(tool_call.function.arguments)
+            audit_decision = self._parse_audit_decision_from_tool(
+                function_args,
                 receipt_details.receipt_id,
-                message.usage.input_tokens,
-                message.usage.output_tokens,
+                response.usage.prompt_tokens,
+                response.usage.completion_tokens,
             )
 
             return audit_decision
@@ -261,59 +385,82 @@ Return a structured response with:
 
         return receipt_details, audit_decision
 
-    def _parse_receipt_details(
-        self, response_text: str, receipt_id: str, input_tokens: int, output_tokens: int
+    def _parse_receipt_details_from_tool(
+        self, tool_input: dict, receipt_id: str, input_tokens: int, output_tokens: int
     ) -> ReceiptDetails:
         """
-        Parse receipt details from Claude's response.
+        Parse receipt details from Claude's tool use input.
 
-        Note: This is a simplified parser. In production, you'd want to use
-        structured outputs or more sophisticated parsing.
+        Args:
+            tool_input: The input dictionary from Claude's tool use
+            receipt_id: Receipt identifier
+            input_tokens: Number of input tokens used
+            output_tokens: Number of output tokens used
+
+        Returns:
+            Parsed ReceiptDetails object
         """
-        # For now, return a basic structure
-        # You would implement actual parsing logic here
+        # Parse location
+        location_data = tool_input.get("location", {})
+        location = Location(
+            city=location_data.get("city"),
+            state=location_data.get("state"),
+            zipcode=location_data.get("zipcode"),
+        ) if location_data else None
+
+        # Parse line items
+        items = []
+        for item_data in tool_input.get("items", []):
+            items.append(LineItem(
+                description=item_data.get("description"),
+                product_code=item_data.get("product_code"),
+                category=item_data.get("category"),
+                item_price=item_data.get("item_price"),
+                sale_price=item_data.get("sale_price"),
+                quantity=item_data.get("quantity"),
+                total=item_data.get("total"),
+            ))
+
         return ReceiptDetails(
             receipt_id=receipt_id,
+            merchant=tool_input.get("merchant"),
+            location=location,
+            time=tool_input.get("time"),
+            items=items,
+            subtotal=tool_input.get("subtotal"),
+            tax=tool_input.get("tax"),
+            total=tool_input.get("total"),
+            handwritten_notes=tool_input.get("handwritten_notes", []),
             metadata={
-                "raw_response": response_text,
                 "input_tokens": input_tokens,
                 "output_tokens": output_tokens,
                 "model": self.config.model,
             },
         )
 
-    def _parse_audit_decision(
-        self, response_text: str, receipt_id: str, input_tokens: int, output_tokens: int
+    def _parse_audit_decision_from_tool(
+        self, tool_input: dict, receipt_id: str, input_tokens: int, output_tokens: int
     ) -> AuditDecision:
         """
-        Parse audit decision from Claude's response.
+        Parse audit decision from Claude's tool use input.
 
-        Note: This is a simplified parser. In production, you'd want to use
-        structured outputs or more sophisticated parsing.
+        Args:
+            tool_input: The input dictionary from Claude's tool use
+            receipt_id: Receipt identifier
+            input_tokens: Number of input tokens used
+            output_tokens: Number of output tokens used
+
+        Returns:
+            Parsed AuditDecision object
         """
-        # Simple keyword-based parsing
-        response_lower = response_text.lower()
-
-        # Extract boolean decisions
-        not_travel_related = "not_travel_related: true" in response_lower or \
-                           "not travel-related: true" in response_lower
-        amount_over_limit = "amount_over_limit: true" in response_lower or \
-                          "amount over limit: true" in response_lower
-        math_error = "math_error: true" in response_lower or \
-                    "math error: true" in response_lower
-        handwritten_x = "handwritten_x: true" in response_lower or \
-                       "handwritten x: true" in response_lower
-
-        needs_audit = any([not_travel_related, amount_over_limit, math_error, handwritten_x])
-
         return AuditDecision(
             receipt_id=receipt_id,
-            not_travel_related=not_travel_related,
-            amount_over_limit=amount_over_limit,
-            math_error=math_error,
-            handwritten_x=handwritten_x,
-            reasoning=response_text,
-            needs_audit=needs_audit,
+            not_travel_related=tool_input.get("not_travel_related", False),
+            amount_over_limit=tool_input.get("amount_over_limit", False),
+            math_error=tool_input.get("math_error", False),
+            handwritten_x=tool_input.get("handwritten_x", False),
+            reasoning=tool_input.get("reasoning", ""),
+            needs_audit=tool_input.get("needs_audit", False),
             metadata={
                 "input_tokens": input_tokens,
                 "output_tokens": output_tokens,
