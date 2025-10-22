@@ -1,10 +1,10 @@
 """
-Agent SDK - An example system demonstrating eval-driven development for receipt inspection.
+Agent SDK - Control generation system for compliance obligations.
 """
 
 __version__ = "0.1.0"
 
-from agent_sdk.agents.receipt_inspection import ReceiptInspectionAgent
+from agent_sdk.agents.control_generation import ControlGenerationAgent
 from agent_sdk.utils.config import Config
 
-__all__ = ["ReceiptInspectionAgent", "Config"]
+__all__ = ["ControlGenerationAgent", "Config"]

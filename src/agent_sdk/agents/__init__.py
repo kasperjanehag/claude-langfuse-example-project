@@ -1,5 +1,5 @@
 """Agent implementations."""
 
-from agent_sdk.agents.receipt_inspection import ReceiptInspectionAgent
+from agent_sdk.agents.control_generation import ControlGenerationAgent
 
-__all__ = ["ReceiptInspectionAgent"]
+__all__ = ["ControlGenerationAgent"]

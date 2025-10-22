@@ -59,13 +59,13 @@ docker-logs: ## Show Langfuse logs
 	docker compose logs -f
 
 eval: ## Run evaluation on test dataset
-	uv run python examples/run_evaluation.py
+	uv run python examples/run_receipt_evaluation.py
 
-agent: ## Run simple agent demo
-	uv run python examples/run_agent.py
+agent: ## Run receipt inspection demo
+	uv run python examples/run_receipt_inspection.py
 
-interactive: ## Start interactive agent session
-	uv run python examples/interactive_agent.py
+setup-dataset: ## Set up Langfuse dataset from test cases
+	uv run python examples/setup_langfuse_dataset.py
 
 setup: dev docker-up ## Complete setup: install dependencies and start Langfuse
 	@echo ""

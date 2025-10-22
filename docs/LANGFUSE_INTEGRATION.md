@@ -113,10 +113,10 @@ Langfuse services defined in `docker-compose.yml`:
 - `langfuse-db` - PostgreSQL database (port 5435 → 5432)
 - `langfuse-clickhouse` - ClickHouse analytics (disabled on macOS for compatibility)
 - `langfuse-redis` - Redis cache (port 6380 → 6379)
-- `langfuse-web` - Web UI (port 3200 → 3000)
+- `langfuse-web` - Web UI (port 3000 → 3000)
 - `langfuse-worker` - Background worker
 
-**Port Mapping**: The web service runs on port 3000 inside the container but is exposed on port 3200 on the host to avoid conflicts.
+**Port Mapping**: The web service runs on port 3000 inside the container and is exposed on port 3000 on the host.
 
 **Important**: Update passwords in `docker-compose.yml` before production use (see `# CHANGEME` comments).
 
@@ -202,17 +202,20 @@ This creates a versioned dataset in Langfuse for tracking evaluation runs.
 
 ## Troubleshooting
 
-### Issue: Wrong Port (3000 vs 3200)
+### Issue: Wrong Port or Host Configuration
 
-**Symptoms**: Script fails with "Langfuse service not reachable at http://localhost:3000"
+**Symptoms**: Script fails with "Langfuse service not reachable at http://localhost:XXXX"
 
-**Diagnosis**: Shell environment variable overriding `.env` file
+**Diagnosis**: Incorrect LANGFUSE_HOST configuration
 
 **Solution**:
 ```bash
-# Check if environment variable is set
+# Check current configuration
 echo $LANGFUSE_HOST
-# If it shows http://localhost:3000, you need to update it
+# Should be: http://localhost:3000
+
+# Check if environment variable is overriding .env
+# If set incorrectly, either:
 
 # Option 1: Update for current session
 export LANGFUSE_HOST=http://localhost:3000
@@ -221,10 +224,14 @@ export LANGFUSE_HOST=http://localhost:3000
 unset LANGFUSE_HOST
 
 # Option 3: Update your shell profile (~/.bashrc, ~/.zshrc)
-# Remove or update any LANGFUSE_HOST exports
+# Remove or update any incorrect LANGFUSE_HOST exports
+
+# Verify .env file has correct value
+cat .env | grep LANGFUSE_HOST
+# Should show: LANGFUSE_HOST=http://localhost:3000
 ```
 
-**Root cause**: The docker-compose maps container port 3000 to host port 3200. Environment variables take precedence over `.env` files in Pydantic settings.
+**Root cause**: Environment variables take precedence over `.env` files in Pydantic settings. The correct port is 3000.
 
 ### Issue: "Connection refused"
 
@@ -272,14 +279,14 @@ curl http://localhost:3000
 ### Issue: Services fail to start
 
 **Common causes**:
-1. Port conflicts (3200, 5435, 6380, 8125, 9002)
+1. Port conflicts (3000, 5435, 6380, 8125, 9002)
 2. Docker resource limits
 3. Database initialization errors
 
 **Solutions**:
 ```bash
 # Check for port conflicts
-lsof -i :3200
+lsof -i :3000
 lsof -i :5435
 
 # View detailed logs

@@ -1,622 +1,301 @@
-# Claude Agent Eval Starter - Receipt Inspection
+# Two-Stage LLM-Driven Control Generation System
 
-A production-ready starter project demonstrating **eval-driven development** for LLM-based agent systems using Claude, Langfuse, and modern Python best practices.
+A compliance control generation system that uses OpenAI to transform legal obligations into context-aware, actionable controls through intelligent semantic mapping.
 
 ## Overview
 
-This project showcases how to build, evaluate, and iterate on AI agent systems using a **receipt inspection and audit decision** use case:
+This system uses a two-stage LLM-driven approach to generate tailored security and privacy controls:
 
-- **Evaluation-Driven Development**: Systematic approach to improving AI agents through measurable metrics
-- **Langfuse Integration**: Complete observability with self-hosted tracing and monitoring
-- **Receipt Inspection Agent**: Vision-based extraction of structured data from receipt images and automated audit decisions
-- **Multiple Evaluation Metrics**: Audit decision accuracy, criteria evaluation, and extraction accuracy
-- **Production Best Practices**: Type hints, async/await, structured logging, and comprehensive testing
+**Stage 1: Obligations → Control Objectives** (Semantic Mapping Layer)
+- LLM analyzes each obligation to understand its semantic intent
+- Matches to existing objectives in registry OR generates new objectives
+- Supports multi-objective mapping (1 obligation → N objectives)
+- Builds a stable, reusable semantic layer
 
-Based on principles from the [OpenAI Cookbook's Eval-Driven System Design guide](https://cookbook.openai.com/examples/partners/eval_driven_system_design/receipt_inspection) and [Hamel Husain and Shreya Shankar's guide to building eval systems](https://www.lennysnewsletter.com/p/building-eval-systems-that-improve).
+**Stage 2: Objectives + Context → Control Variants → Controls** (Implementation Layer)
+- LLM evaluates objectives with company context
+- Matches to existing variants in registry OR generates new variants
+- Selects appropriate size variant (startup/SME/enterprise)
+- Applies jurisdiction-specific requirements
+- Generates final controls
 
-## 📚 Documentation
-
-- **[docs/CHANGES.md](docs/CHANGES.md)** - Summary of recent updates and improvements
-- **[docs/IMPLEMENTATION_NOTES.md](docs/IMPLEMENTATION_NOTES.md)** - Technical details and architecture decisions
-- **[docs/TESTING_GUIDE.md](docs/TESTING_GUIDE.md)** - Step-by-step testing instructions
-- **[data/images/README.md](data/images/README.md)** - How to obtain receipt images for testing
-
-## Features
-
-### Agent System
-- **Receipt Inspection Agent** with vision-based data extraction
-- Automated audit decision making based on configurable criteria
-- Powered by Claude 3.5 Sonnet with vision capabilities
-- **Structured outputs** using Claude's tool use feature for reliable parsing
-- Full Langfuse observability integration with dataset versioning
-- Comprehensive evaluation metrics aligned with business KPIs
-
-### Use Case: Receipt Parsing and Audit Decisions
-
-The system processes receipt images and makes audit decisions based on:
-
-1. **NOT_TRAVEL_RELATED**: Identifies if expenses are not travel-related (office supplies, food, etc.)
-2. **AMOUNT_OVER_LIMIT**: Flags receipts exceeding $50
-3. **MATH_ERROR**: Detects arithmetic errors in receipt totals
-4. **HANDWRITTEN_X**: Identifies receipts marked with handwritten "X"
-
-A receipt needs auditing if **any** criterion is violated. This mirrors real-world expense validation workflows where certain receipts require human review.
-
-### Evaluation Framework
-- **Audit Decision Metric**: Validates final audit decision correctness
-- **Audit Criteria Metric**: Evaluates accuracy of individual criterion assessments
-- **Extraction Accuracy Metric**: Measures receipt data extraction quality
-- Automated evaluation pipeline with rich console output
-- Results tracking and export
-- LLM-as-judge for nuanced evaluations
-
-### Observability
-- Self-hosted Langfuse setup with Docker Compose
-- Automatic trace collection for all agent operations
-- Token usage tracking
-- Error monitoring and debugging
-
-## Project Structure
+## Architecture
 
 ```
-claude-agent-eval-starter/
-├── src/
-│   └── agent_sdk/
-│       ├── agents/              # Agent implementations
-│       │   └── receipt_inspection.py
-│       ├── evals/               # Evaluation framework
-│       │   └── metrics.py       # Receipt-specific evaluation metrics
-│       └── utils/               # Shared utilities
-│           ├── config.py
-│           └── models.py
-├── data/
-│   ├── datasets/                # Test data
-│   │   └── receipt_test_cases.json
-│   └── images/                  # Receipt images (not included)
-├── examples/                    # Example scripts
-│   ├── run_receipt_inspection.py
-│   └── run_receipt_evaluation.py
-├── tests/                       # Unit and integration tests
-├── docker-compose.yml           # Langfuse self-hosted setup
-├── pyproject.toml              # Project configuration
-└── README.md
+┌─────────────────────────────────────────────────────────┐
+│  STAGE 1: Obligations → Control Objectives              │
+│  (Context-less semantic understanding)                  │
+│                                                          │
+│  LLM Obligation Mapper:                                 │
+│  - Analyzes obligation intent                           │
+│  - Matches existing objectives OR                       │
+│  - Generates new objectives                             │
+│  - Auto-adds to registry                                │
+└─────────────────────────────────────────────────────────┘
+                        ↓
+        [Control Objectives Registry]
+        (Stable semantic layer - grows over time)
+                        ↓
+┌─────────────────────────────────────────────────────────┐
+│  STAGE 2: Objectives + Context → Control Variants       │
+│  (Context-aware implementation selection)               │
+│                                                          │
+│  LLM Variant Mapper:                                    │
+│  - Matches existing variants OR                         │
+│  - Generates new variants                               │
+│  - Selects size variant                                 │
+│  - Applies jurisdiction requirements                    │
+│  - Auto-adds to registry                                │
+└─────────────────────────────────────────────────────────┘
+                        ↓
+                   Controls
 ```
+
+## Key Features
+
+### LLM-Driven Mapping
+- **Semantic Understanding**: OpenAI analyzes obligation text to understand true intent, not just keywords
+- **Multi-Objective Support**: Complex obligations can map to multiple objectives
+- **Automatic Generation**: LLM creates new objectives/variants when no good match exists
+- **Deterministic**: Temperature=0 ensures consistent mappings
+
+### Growing Registries
+- **Objective Registry** (`data/control_registry/objectives.json`):
+  - Stores all control objectives (context-less semantic layer)
+  - Grows as LLM encounters new obligation types
+  - Becomes more comprehensive over time
+
+- **Variant Registry** (`data/control_registry/control_variants.json`):
+  - Stores control implementation variants
+  - Each variant has startup/SME/enterprise size options
+  - Includes jurisdiction-specific requirements
+  - Grows as LLM encounters new implementation needs
+
+### Perfect World End State
+Once registries mature:
+- New obligations → fast registry lookups (no LLM needed)
+- Same obligations always → same objectives (consistency)
+- Any company context → deterministic variant selection
+- System becomes instant and cost-free
+
+## Key Models
+
+- **Obligation**: Legal/regulatory requirement (simplified: ID, text, framework, domain)
+- **ControlObjective**: Context-less semantic abstraction with intent and rationale
+- **ControlVariant**: Implementation template with size variants and jurisdiction requirements
+- **Control**: Final generated, company-specific control
+- **CompanyContext**: Company information for tailoring (size, industry, jurisdictions)
 
 ## Quick Start
 
 ### Prerequisites
 
-- Python 3.10 or higher
-- [uv](https://docs.astral.sh/uv/) - Fast Python package installer
-- Docker and Docker Compose
-- Anthropic API key
+1. **OpenAI Credentials**:
+   - Configure in `.env` file:
+     - `OPENAI_API_KEY` - Your OpenAI API key
+     - `OPENAI_BASE_URL` - API endpoint (defaults to OpenAI public API)
+     - `OPENAI_MODEL` - Model to use (defaults to gpt-5-nano-2025-08-07)
 
-### 1. Clone and Install
+2. **Langfuse** (for observability):
+   ```bash
+   docker compose up -d
+   # Get keys from http://localhost:3000
+   ```
 
-```bash
-cd claude-agent-eval-starter
+3. **Environment**:
+   ```bash
+   # .env file should contain:
+   # OPENAI_API_KEY=your_key
+   # OPENAI_BASE_URL=https://api.openai.com/v1  (or custom gateway)
+   # OPENAI_MODEL=gpt-5-nano-2025-08-07
+   # LANGFUSE_PUBLIC_KEY=...
+   # LANGFUSE_SECRET_KEY=...
+   ```
 
-# Create virtual environment and install dependencies with uv
-uv venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+4. **Dependencies**:
+   ```bash
+   pip install openai langfuse pandas openpyxl python-dotenv pydantic-settings
+   ```
 
-# Install package with dependencies
-uv pip install -e ".[dev]"
-
-# Or use uv sync to install from lock file (faster)
-uv sync --all-extras
-```
-
-### 2. Set Up Langfuse (Self-Hosted)
-
-**Important**: Before starting Langfuse, update the secrets in `docker-compose.yml`:
-- Change all passwords and secrets marked with `# CHANGEME`
-- Use long, random passwords (minimum 32 characters)
-
-```bash
-# Start Langfuse and its dependencies
-docker compose up -d
-
-# Wait for services to be ready (2-3 minutes)
-docker compose logs -f langfuse-web
-
-# When you see "Ready", Langfuse is running
-# Access UI at http://localhost:3000
-```
-
-**First-time setup in Langfuse UI**:
-1. Navigate to http://localhost:3000
-2. Create your account
-3. Create a new project
-4. Go to Settings → API Keys
-5. Copy your Public Key and Secret Key
-
-### 3. Configure Environment
+### Running
 
 ```bash
-# Copy example environment file
-cp .env.example .env
-
-# Edit .env and add your keys:
-# - ANTHROPIC_API_KEY (from console.anthropic.com)
-# - LANGFUSE_PUBLIC_KEY (from Langfuse UI)
-# - LANGFUSE_SECRET_KEY (from Langfuse UI)
-```
-
-### 4. Set Up Langfuse Dataset (Optional but Recommended)
-
-```bash
-# Create the receipt inspection dataset in Langfuse
-python examples/setup_langfuse_dataset.py
+python examples/run_control_generation.py
 ```
 
 This will:
-- Load test cases from `data/datasets/receipt_test_cases.json`
-- Create a dataset named "receipt_inspection_v1" in Langfuse
-- Add all 20 test cases as dataset items from the Roboflow dataset
-- Enable tracking of evaluation runs against versioned test data
+1. **Stage 1**: Load 5 obligations → LLM maps to objectives
+2. **Stage 2**: Take objectives + company context → LLM generates variants & controls
+3. Save results to `data/obligations/generated_controls/`
+4. Update registries with any new objectives/variants
+5. Track everything in Langfuse at http://localhost:3000
 
-**Note**: This project uses the [Roboflow Receipt Handwriting Detection dataset](https://universe.roboflow.com/newreceipts/receipt-handwriting-detection) (CC BY 4.0). See `data/images/README.md` for details.
+### What to Expect
 
-### 5. Run Examples
+First run:
+- LLM will likely match some existing objectives
+- May generate a few new objectives if obligations are novel
+- May generate new variants if implementation needs differ
+- Registries will grow
 
-**Process a Single Receipt**:
-```bash
-python examples/run_receipt_inspection.py
-```
+Subsequent runs with same obligations:
+- Should mostly match existing objectives (faster, cheaper)
+- Registries continue to grow and stabilize
 
-This will:
-- Extract structured details from a receipt image
-- Evaluate the receipt against audit criteria
-- Display the audit decision and reasoning
-- Track the operation in Langfuse
+## Example Output
 
-**Run Evaluations**:
-```bash
-python examples/run_receipt_evaluation.py
-```
-
-The evaluation will:
-- Process all 20 test cases from `data/datasets/receipt_test_cases.json`
-- Use images from the Roboflow dataset in `data/test/images/`
-- Evaluate each receipt using 3 metrics:
-  - Audit Decision Correctness (most critical)
-  - Audit Criteria Accuracy
-  - Extraction Accuracy
-- Display results in rich console tables
-- Save detailed results to `eval_results/`
-- Track all traces in Langfuse
-
-**Note**: The evaluation uses the 20 test images from the Roboflow dataset located in `data/test/images/`. The test cases include gas station receipts, retail stores, and auto service receipts with varying amounts and categories.
-
-## Eval-Driven Development Workflow
-
-This project demonstrates the systematic approach to improving AI agents through a receipt inspection use case:
-
-### 1. Define Metrics That Matter
-
-Instead of generic scores, we measure what actually impacts business outcomes:
-
-- **Audit Decision Correctness**: Did the system make the right final decision? (Most critical)
-- **Audit Criteria Accuracy**: Were individual criteria (travel-related, amount, math, marks) correctly evaluated?
-- **Extraction Accuracy**: How accurately were receipt details extracted?
-
-These metrics directly connect to business KPIs:
-- False negatives (missing audit-worthy receipts) = compliance risk
-- False positives (unnecessary audits) = wasted human review time
-- Extraction errors = downstream decision errors
-
-See `src/agent_sdk/evals/metrics.py` for implementations.
-
-### 2. Build a Test Dataset
-
-Create test cases that represent real receipt scenarios:
-
-```json
-{
-  "id": "receipt_001",
-  "receipt_id": "rec_walmart_supplies",
-  "image_path": "data/images/walmart_supplies.jpg",
-  "description": "Walmart receipt for office supplies",
-  "ground_truth": {
-    "details": {
-      "merchant": "Walmart",
-      "total": "54.96",
-      "items": [...]
-    },
-    "audit_decision": {
-      "not_travel_related": true,
-      "amount_over_limit": true,
-      "needs_audit": true,
-      "reasoning": "..."
-    }
-  }
-}
-```
-
-See `data/datasets/receipt_test_cases.json` for 20 test cases from the Roboflow dataset covering:
-- Travel expenses (12 gas station receipts)
-- Non-travel expenses (retail stores, auto services)
-- Various amounts (under/over $50 threshold)
-- Real-world receipt images with handwriting detection labels
-
-### 3. Run Evaluations
-
-```bash
-python examples/run_evaluation.py
-```
-
-This produces:
-- Pass/fail for each test case
-- Scores for each metric
-- Overall pass rate
-- Detailed explanations
-- Langfuse traces for debugging
-
-### 4. Analyze and Iterate
-
-1. **Review failures** in the console output
-2. **Examine traces** in Langfuse (http://localhost:3000)
-3. **Identify patterns**: Are failures in specific categories?
-4. **Make improvements**:
-   - Update prompts
-   - Enhance retrieval
-   - Add knowledge base entries
-5. **Re-run evaluations** to measure improvement
-6. **Track progress** over time using Langfuse datasets
-
-### Example Output
+From 5 GDPR obligations:
 
 ```
-Receipt Inspection Evaluation
+STAGE 1: 5 obligations → 3 unique objectives (with multi-mapping)
+STAGE 2: 3 objectives + SME context → 3 controls
 
-Overall Results
-┏━━━━━━━━━━━━━┳━━━━━━━┓
-┃ Metric      ┃ Value ┃
-┡━━━━━━━━━━━━━╇━━━━━━━┩
-│ Total Cases │ 10    │
-│ Passed      │ 9     │
-│ Failed      │ 1     │
-│ Pass Rate   │ 90.0% │
-└─────────────┴───────┘
+Generated Controls:
+- CV-FAIR-1-SME: Fairness assessment procedures
+- CV-TRANS-1-SME: Privacy notice management system
+- CV-PURPOSE-1-SME: Purpose limitation controls
 
-Metric Averages
-┏━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┓
-┃ Metric                  ┃ Average Score ┃
-┡━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━┩
-│ audit_decision_correct  │ 0.90          │
-│ audit_criteria_accuracy │ 0.95          │
-│ extraction_accuracy     │ 0.85          │
-└─────────────────────────┴───────────────┘
+Registry Growth:
+- Objectives: 4 (started with 4, no new ones needed)
+- Variants: 4 (started with 4, no new ones needed)
 ```
 
-## Langfuse Features
+## Project Structure
 
-### Viewing Traces
+```
+src/agent_sdk/
+├── models/
+│   └── compliance.py          # 5 core Pydantic models
+├── agents/
+│   ├── llm_obligation_mapper.py   # Stage 1: Obligations → Objectives (LLM)
+│   ├── llm_variant_mapper.py      # Stage 2: Objectives → Variants (LLM)
+│   └── control_generation.py      # Main orchestration
+├── registries/
+│   ├── objective_registry.py      # Objective storage and management
+│   └── variant_registry.py        # Variant storage and management
+└── utils/
+    ├── config.py                   # Configuration management
+    └── langfuse_check.py           # Langfuse connectivity check
 
-1. Go to http://localhost:3000
-2. Navigate to "Traces"
-3. Click on any trace to see:
-   - Full prompt and completion
-   - Token usage
-   - Latency
-   - Evaluation scores
-   - Nested observations (retrieval, generation, etc.)
+data/
+├── control_registry/
+│   ├── objectives.json         # Control objectives registry (grows over time)
+│   └── control_variants.json   # Control variants registry (grows over time)
+└── obligations/
+    └── Obligations and Controls example.xlsx
 
-### Creating Datasets
+docs/
+└── FUTURE_CONSIDERATIONS.md    # Future enhancements and design decisions
+```
 
-Langfuse datasets let you version and track test sets:
+## How It Works
 
-1. In Langfuse UI: Datasets → Create Dataset
-2. Add test cases manually or import from traces
-3. Run evaluations against datasets
-4. Compare results across versions
-
-### Monitoring Production
-
-When deploying to production:
-
-1. Keep the Langfuse decorator (`@observe`) on your functions
-2. Point `LANGFUSE_HOST` to your production Langfuse instance
-3. Monitor:
-   - Average response quality scores
-   - Token usage trends
-   - Error rates
-   - Latency percentiles
-
-## Customization
-
-### Modifying Audit Criteria
-
-To change audit rules, edit the prompts in `src/agent_sdk/agents/receipt_inspection.py`:
+### Stage 1: Obligation → Objectives Mapping
 
 ```python
-# Example: Change the amount threshold from $50 to $100
-audit_prompt = """...
-2. AMOUNT_OVER_LIMIT: The total amount exceeds $100  # Changed from $50
-..."""
-```
+# LLM analyzes obligation
+obligation = "Process personal data fairly and transparently"
 
-Or add new criteria:
+# LLM prompt includes all existing objectives for context
+# LLM decides: Match existing OR generate new
 
-```python
-# Example: Add a new criterion for weekend expenses
-class AuditDecision(BaseModel):
-    # ... existing fields ...
-    weekend_expense: bool = Field(
-        description="True if the expense occurred on a weekend"
-    )
-```
-
-### Adding New Metrics
-
-Create a new metric in `src/agent_sdk/evals/metrics.py`:
-
-```python
-class CustomReceiptMetric(Metric):
-    def __init__(self):
-        super().__init__(name="custom_metric", threshold=0.8)
-
-    async def evaluate(self, audit_decision, ground_truth):
-        # Your evaluation logic for audit decisions
-        score = ...
-        explanation = ...
-        passed = score >= self.threshold
-        return score, explanation, passed
-```
-
-Add to evaluation script in `examples/run_receipt_evaluation.py`:
-
-```python
-metrics = [
-    AuditDecisionMetric(),
-    AuditCriteriaMetric(),
-    CustomReceiptMetric(),  # Add your metric
+# Result: Maps to 2 existing objectives
+objectives = [
+    "OBJ-FAIR-1: Fairness in personal data processing",
+    "OBJ-TRANS-1: Transparency in data processing"
 ]
-```
 
-### Adding Test Cases
-
-Edit `data/datasets/receipt_test_cases.json`:
-
-```json
-{
-  "id": "receipt_011",
-  "receipt_id": "rec_your_test",
-  "image_path": "data/images/your_receipt.jpg",
-  "description": "Description of the test case",
-  "ground_truth": {
-    "details": {
-      "merchant": "Merchant Name",
-      "total": "99.99",
-      ...
-    },
-    "audit_decision": {
-      "not_travel_related": false,
-      "amount_over_limit": true,
-      "math_error": false,
-      "handwritten_x": false,
-      "needs_audit": true,
-      "reasoning": "Expected reasoning..."
-    }
-  }
+# If new objective needed, LLM generates:
+new_objective = {
+    "objective_name": "Clear name",
+    "description": "What capability must exist",
+    "intent": "Why this matters",
+    "rationale": "Why this is separate from existing"
 }
+# Auto-added to registry
 ```
 
-### Using Different Models
+### Stage 2: Objective + Context → Variants
 
-Update `src/agent_sdk/utils/config.py` or set environment variable:
+```python
+# LLM evaluates objective with company context
+objective = "OBJ-TRANS-1: Transparency in data processing"
+context = {
+    "employee_count": 250,  # SME
+    "jurisdictions": ["SE", "EU"]
+}
 
-```bash
-export MODEL=claude-3-opus-20240229
+# LLM decides: Match existing variant OR generate new
+
+# Result: Matches existing variant
+variant = "CV-TRANS-1" (has startup/SME/enterprise options)
+
+# Selects SME variant (applies_if: 50 <= employees < 1000)
+selected = variant.variants["sme"]
+
+# Applies Swedish jurisdiction requirements
+requirements = ["Plain Swedish language", "GDPR Art 12 compliance", ...]
+
+# Builds final control
+control = Control(
+    control_id="CV-TRANS-1-SME",
+    control_name="Privacy notice management system",
+    control_description="...",
+    expected_evidence="...",
+    review_interval="6 months"
+)
 ```
 
-## Development
+## Configuration
 
-### Running Tests
+Key settings in `src/agent_sdk/utils/config.py`:
 
-```bash
-# Run all tests (uv will use the virtual environment)
-uv run pytest
+```python
+# LLM Configuration
+model = "gpt-5-nano-2025-08-07"  # or other OpenAI model
+temperature = 0.0  # Deterministic for consistency
+openai_base_url = "https://api.openai.com/v1"  # or custom gateway
 
-# With coverage
-uv run pytest --cov=src/agent_sdk --cov-report=html
+# Registry Paths
+objectives_registry = "data/control_registry/objectives.json"
+variants_registry = "data/control_registry/control_variants.json"
 
-# Run specific test file
-uv run pytest tests/unit/test_agent.py
+# Obligations Source
+obligations_excel = "data/obligations/Obligations and Controls example.xlsx"
 ```
 
-### Code Quality
+## Observability
 
-```bash
-# Format code
-uv run black src/ tests/ examples/
+All LLM calls and mapping decisions are traced in Langfuse:
 
-# Lint
-uv run ruff check src/ tests/ examples/
+- View at: http://localhost:3000
+- Search by: `generation_id`
+- Traces show:
+  - Stage 1 LLM decisions (match vs generate)
+  - Stage 2 LLM decisions (match vs generate)
+  - Registry lookups and additions
+  - Variant selection logic
 
-# Type checking
-uv run mypy src/
-```
+## Future Enhancements
 
-### Pre-commit Hooks
+See `docs/FUTURE_CONSIDERATIONS.md` for detailed discussion of:
 
-```bash
-# Install pre-commit hooks
-uv run pre-commit install
+- Confidence scoring and thresholds
+- Human review workflows
+- Registry consolidation and deduplication
+- Embedding-based similarity matching
+- Historical consistency validation
+- Performance optimization (batching, caching)
+- Evaluation metrics and quality tracking
 
-# Run manually
-uv run pre-commit run --all-files
-```
+## Design Principles
 
-## Architecture Decisions
-
-### Why Vision + Text (Two-Step Process)?
-The receipt inspection agent uses a two-step process:
-1. **Vision API** extracts structured data from receipt images
-2. **Text-based LLM** makes audit decisions based on extracted data
-
-This approach:
-- Separates concerns (extraction vs. decision-making)
-- Enables easier debugging (can examine extracted data)
-- Allows for different evaluation metrics at each stage
-- Mirrors real-world workflows (OCR → business logic)
-
-Alternative: End-to-end vision model making decisions directly could reduce latency but sacrifices interpretability.
-
-### Why These Specific Audit Criteria?
-The four criteria (travel-related, amount limit, math errors, handwritten marks) are:
-- **Business-aligned**: Map directly to real expense validation needs
-- **Measurable**: Clear pass/fail evaluation
-- **Diverse**: Test different capabilities (classification, arithmetic, OCR)
-- **Representative**: Cover common edge cases in expense processing
-
-### Why Async/Await?
-- Enables concurrent API calls during evaluation
-- Better performance when processing multiple test cases
-- Prepares codebase for production-scale concurrent requests
-- Critical for batch processing of receipt images
-
-### Why Self-Hosted Langfuse?
-- Complete data privacy (important for financial documents)
-- No external dependencies for tracing
-- Customizable retention and storage
-- Free for unlimited usage
-
-### Why Multiple Evaluation Metrics?
-- **Audit Decision Correctness**: The ultimate business outcome
-- **Audit Criteria Accuracy**: Diagnoses where the system fails
-- **Extraction Accuracy**: Identifies OCR/vision issues
-
-This layered approach helps pinpoint whether failures are due to:
-1. Poor vision/extraction
-2. Faulty business logic
-3. Edge cases not covered in prompts
-
-### Why Structured Test Cases?
-- Version control for test data (Git-friendly JSON)
-- Easy to review and update with domain experts
-- Shareable across team (no proprietary formats)
-- Foundation for regression testing
-- Enables A/B testing of different prompts/models
-
-## Troubleshooting
-
-### Langfuse Not Starting
-
-```bash
-# Check service status
-docker compose ps
-
-# View logs
-docker compose logs langfuse-web
-docker compose logs langfuse-db
-
-# Restart services
-docker compose restart
-```
-
-### Wrong Port Error (3000 vs 3200)
-
-**Symptom**: Script fails with "Langfuse service not reachable at http://localhost:3000" even though Langfuse is running on port 3200.
-
-**Cause**: Shell environment variable `LANGFUSE_HOST` is overriding the `.env` file value.
-
-**Solution**:
-```bash
-# Check if environment variable is set
-echo $LANGFUSE_HOST
-
-# If it shows http://localhost:3000, fix it:
-export LANGFUSE_HOST=http://localhost:3000
-
-# Or unset it to use .env value
-unset LANGFUSE_HOST
-
-# To permanently fix, check your shell profile
-# (~/.bashrc, ~/.zshrc) and remove/update LANGFUSE_HOST exports
-```
-
-**Note**: Pydantic settings give priority to environment variables over `.env` files.
-
-### API Key Errors
-
-```bash
-# Verify .env file exists and has correct keys
-cat .env
-
-# Check environment variables are loaded
-python -c "from agent_sdk.utils.config import Config; c = Config(); print(c.anthropic_api_key[:10] + '...')"
-```
-
-### Import Errors
-
-```bash
-# Ensure package is installed in editable mode
-pip install -e .
-
-# Verify Python path
-python -c "import sys; print(sys.path)"
-```
-
-## Resources
-
-### Documentation
-- [OpenAI Cookbook: Eval-Driven System Design](https://cookbook.openai.com/examples/partners/eval_driven_system_design/receipt_inspection)
-- [Langfuse Docs](https://langfuse.com/docs)
-- [Anthropic API Reference](https://docs.anthropic.com/)
-- [Claude Vision API Guide](https://docs.anthropic.com/claude/docs/vision)
-- [Building Eval Systems (Lenny's Newsletter)](https://www.lennysnewsletter.com/p/building-eval-systems-that-improve)
-
-### Related Projects
-- [Langfuse Python SDK](https://github.com/langfuse/langfuse-python)
-- [Anthropic Python SDK](https://github.com/anthropics/anthropic-sdk-python)
-- [OpenAI Cookbook](https://github.com/openai/openai-cookbook)
-
-### Learning Resources
-- [AI Evals Course by Hamel & Shreya](https://maven.com/parlance-labs/evals)
-- [LLM Evaluation Guide](https://www.oreilly.com/library/view/building-llm-powered/9781098150228/)
-- [Receipt Handwriting Detection Dataset](https://universe.roboflow.com/newreceipts/receipt-handwriting-detection) (CC BY 4.0)
-
-## Contributing
-
-Contributions are welcome! Areas for improvement:
-
-- **Receipt-specific enhancements**:
-  - Support for more receipt formats (European, Asian receipts)
-  - Multi-page receipt handling
-  - Receipt image preprocessing (rotation, denoising)
-  - Integration with OCR services (Textract, Azure Form Recognizer)
-
-- **Evaluation improvements**:
-  - Additional audit criteria (merchant allowlists, category limits)
-  - Business metric tracking (audit rate vs. accuracy trade-off)
-  - A/B testing framework for prompt variations
-  - Regression detection
-
-- **General enhancements**:
-  - Batch receipt processing pipeline
-  - Real-time monitoring dashboards
-  - CI/CD pipeline examples
-  - Production deployment guides (Docker, Kubernetes)
-  - Cost optimization strategies
+1. **LLM as Decision Maker**: No confidence thresholds in v1 - LLM decides when to match vs generate
+2. **Auto-Growing Registries**: New objectives and variants added automatically
+3. **Deterministic**: Temperature=0 ensures consistent mappings
+4. **Semantic Focus**: Intent-based matching, not keyword matching
+5. **Simplicity First**: Complex features (consolidation, review workflows) deferred
 
 ## License
 
-MIT License - see LICENSE file for details
-
-## Acknowledgments
-
-- Receipt inspection use case based on [OpenAI's Eval-Driven System Design Cookbook](https://cookbook.openai.com/examples/partners/eval_driven_system_design/receipt_inspection)
-- Eval-driven methodology inspired by [Hamel Husain](https://twitter.com/HamelHusain) and [Shreya Shankar](https://twitter.com/sh_reya)'s work on LLM evaluations
-- Receipt images dataset from [Roboflow Receipt Handwriting Detection](https://universe.roboflow.com/newreceipts/receipt-handwriting-detection) (CC BY 4.0)
-- Built with [Anthropic's Claude](https://www.anthropic.com/claude)
-- Observability powered by [Langfuse](https://langfuse.com/)
-
----
-
-**Questions or Issues?**
-
-Open an issue on GitHub or reach out to the maintainers.
-
-**Happy Building!** 🚀
+[Your license here]
