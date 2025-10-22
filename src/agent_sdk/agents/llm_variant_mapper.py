@@ -1,7 +1,6 @@
 """LLM-driven mapping from objectives + context to control variants (Stage 2)."""
 
 import json
-import logging
 from typing import Dict, List, Optional
 
 import openai
@@ -11,7 +10,6 @@ from agent_sdk.models.compliance import CompanyContext, Control, ControlObjectiv
 from agent_sdk.registries.variant_registry import VariantRegistry
 from agent_sdk.utils.config import Config
 
-logger = logging.getLogger(__name__)
 
 
 class LLMVariantMapper:
@@ -71,11 +69,6 @@ class LLMVariantMapper:
         Returns:
             ControlVariant if found/generated, None otherwise
         """
-        logger.info(
-            f"Mapping objective {objective.objective_id} to variant "
-            f"(context: {company_context.employee_count} employees, {company_context.jurisdictions})"
-        )
-
         # Get existing variants from registry (filter by domain for efficiency)
         existing_variants = self.variant_registry.get_by_domain(objective.domain)
 
@@ -111,11 +104,6 @@ class LLMVariantMapper:
             result = self._parse_llm_response(response_text)
 
             # Log LLM decision
-            logger.info(
-                f"LLM decision for {objective.objective_id}: "
-                f"matched={len(result.get('matched_variant_ids', []))}, "
-                f"new={len(result.get('new_variants', []))}"
-            )
 
             # Process result
             variant = self._process_mapping_result(
@@ -137,7 +125,6 @@ class LLMVariantMapper:
             return variant
 
         except Exception as e:
-            logger.error(f"Error mapping objective {objective.objective_id}: {e}")
             langfuse_context.update_current_observation(
                 metadata={"error": str(e)}
             )
@@ -299,8 +286,6 @@ Important Guidelines:
             return result
 
         except json.JSONDecodeError as e:
-            logger.error(f"Failed to parse LLM response as JSON: {e}")
-            logger.debug(f"Response text: {response_text}")
             raise ValueError(f"Invalid JSON response from LLM: {e}")
 
     def _process_mapping_result(
@@ -332,10 +317,7 @@ Important Guidelines:
             variant_id = matched_ids[0]  # Take first match
             variant = self.variant_registry.get_by_id(variant_id)
             if variant:
-                logger.info(f"Matched objective {objective.objective_id} → variant {variant_id}")
                 return variant
-            else:
-                logger.warning(f"LLM referenced non-existent variant: {variant_id}")
 
         # Check for new variant
         new_variants_data = result.get("new_variants", [])
@@ -348,7 +330,6 @@ Important Guidelines:
             )
             return variant
 
-        logger.warning(f"No variant matched or generated for objective {objective.objective_id}")
         return None
 
     def _create_and_register_variant(
@@ -386,15 +367,10 @@ Important Guidelines:
             # Add to registry (persists to JSON)
             self.variant_registry.add_variant(variant)
 
-            logger.info(
-                f"Generated new variant: {new_id} for objective {objective.objective_id}"
-            )
 
             return variant
 
         except Exception as e:
-            logger.error(f"Failed to create variant from LLM data: {e}")
-            logger.debug(f"Variant data: {var_data}")
             return None
 
     @observe(name="select_variant_and_build_control")
@@ -422,10 +398,6 @@ Important Guidelines:
         Returns:
             Control object or None
         """
-        logger.debug(
-            f"Building control from variant {variant.variant_id} for context with "
-            f"{company_context.employee_count} employees"
-        )
 
         # Select appropriate size variant
         selected_variant = None
@@ -437,7 +409,6 @@ Important Guidelines:
                 break
 
         if not selected_variant:
-            logger.warning(f"No size variant matched for {variant.variant_id}")
             # Default to first variant
             selected_variant = variant.variants[0] if variant.variants else None
 
@@ -480,7 +451,6 @@ Important Guidelines:
             impact="Critical"  # TODO: Derive from obligation impact
         )
 
-        logger.info(f"Built control {control_id} from variant {variant.variant_id}")
 
         return control
 
@@ -512,5 +482,4 @@ Important Guidelines:
             return bool(result)
 
         except Exception as e:
-            logger.warning(f"Failed to evaluate applies_if '{applies_if}': {e}")
             return False

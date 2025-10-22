@@ -1,13 +1,11 @@
 """Variant registry for persistent storage and management of control variants."""
 
 import json
-import logging
 from pathlib import Path
 from typing import Dict, List, Optional
 
 from agent_sdk.models.compliance import ControlVariant
 
-logger = logging.getLogger(__name__)
 
 
 class VariantRegistry:
@@ -40,13 +38,10 @@ class VariantRegistry:
         self.index = {var.variant_id: var for var in self.variants}
         self.objective_index = self._build_objective_index()
 
-        logger.info(f"Loaded {len(self.variants)} variants from registry")
 
     def _load_variants(self) -> List[ControlVariant]:
         """Load variants from JSON file."""
         if not self.registry_path.exists():
-            logger.warning(f"Variants file not found: {self.registry_path}")
-            logger.info("Creating empty variants registry")
             self._ensure_registry_file()
             return []
 
@@ -126,7 +121,6 @@ class VariantRegistry:
             variant: ControlVariant to add
         """
         if variant.variant_id in self.index:
-            logger.warning(f"Variant {variant.variant_id} already exists in registry")
             return
 
         self.variants.append(variant)
@@ -139,7 +133,6 @@ class VariantRegistry:
 
         self._save_variants()
 
-        logger.info(f"Added new variant to registry: {variant.variant_id}")
 
     def generate_next_id(self, objective_id: str) -> str:
         """
@@ -199,7 +192,6 @@ class VariantRegistry:
         with open(self.registry_path, "w") as f:
             json.dump(data, f, indent=2)
 
-        logger.debug(f"Saved {len(self.variants)} variants to {self.registry_path}")
 
     def get_stats(self) -> Dict[str, any]:
         """

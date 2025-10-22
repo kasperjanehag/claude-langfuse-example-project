@@ -1,13 +1,11 @@
 """Objective registry for persistent storage and management of control objectives."""
 
 import json
-import logging
 from pathlib import Path
 from typing import Dict, List, Optional
 
 from agent_sdk.models.compliance import ControlObjective
 
-logger = logging.getLogger(__name__)
 
 
 class ObjectiveRegistry:
@@ -38,13 +36,10 @@ class ObjectiveRegistry:
         self.objectives = self._load_objectives()
         self.index = {obj.objective_id: obj for obj in self.objectives}
 
-        logger.info(f"Loaded {len(self.objectives)} objectives from registry")
 
     def _load_objectives(self) -> List[ControlObjective]:
         """Load objectives from JSON file."""
         if not self.registry_path.exists():
-            logger.warning(f"Objectives file not found: {self.registry_path}")
-            logger.info("Creating empty objectives registry")
             self._ensure_registry_file()
             return []
 
@@ -91,14 +86,12 @@ class ObjectiveRegistry:
             objective: ControlObjective to add
         """
         if objective.objective_id in self.index:
-            logger.warning(f"Objective {objective.objective_id} already exists in registry")
             return
 
         self.objectives.append(objective)
         self.index[objective.objective_id] = objective
         self._save_objectives()
 
-        logger.info(f"Added new objective to registry: {objective.objective_id}")
 
     def generate_next_id(self, domain: str) -> str:
         """
@@ -149,7 +142,6 @@ class ObjectiveRegistry:
         with open(self.registry_path, "w") as f:
             json.dump(data, f, indent=2)
 
-        logger.debug(f"Saved {len(self.objectives)} objectives to {self.registry_path}")
 
     def get_by_domain(self, domain: str) -> List[ControlObjective]:
         """

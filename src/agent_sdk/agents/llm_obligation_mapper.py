@@ -1,7 +1,6 @@
 """LLM-driven mapping from obligations to control objectives (Stage 1)."""
 
 import json
-import logging
 from typing import Dict, List, Optional
 
 import openai
@@ -11,7 +10,6 @@ from agent_sdk.models.compliance import ControlObjective, Obligation
 from agent_sdk.registries.objective_registry import ObjectiveRegistry
 from agent_sdk.utils.config import Config
 
-logger = logging.getLogger(__name__)
 
 
 class LLMObligationMapper:
@@ -67,7 +65,6 @@ class LLMObligationMapper:
         Returns:
             List of ControlObjective objects (may be empty if no match/generation)
         """
-        logger.info(f"Mapping obligation {obligation.obligation_id} to objectives")
 
         # Get existing objectives from registry
         existing_objectives = self.objective_registry.get_all()
@@ -99,13 +96,6 @@ class LLMObligationMapper:
             # Parse structured JSON output
             result = self._parse_llm_response(response_text)
 
-            # Log LLM decision
-            logger.info(
-                f"LLM decision for {obligation.obligation_id}: "
-                f"{len(result.get('matched_objective_ids', []))} matched, "
-                f"{len(result.get('new_objectives', []))} new"
-            )
-
             # Process results
             objectives = self._process_mapping_result(result, obligation, generation_id)
 
@@ -120,7 +110,6 @@ class LLMObligationMapper:
             return objectives
 
         except Exception as e:
-            logger.error(f"Error mapping obligation {obligation.obligation_id}: {e}")
             langfuse_context.update_current_observation(
                 metadata={"error": str(e)}
             )
@@ -235,8 +224,6 @@ Important Guidelines:
             return result
 
         except json.JSONDecodeError as e:
-            logger.error(f"Failed to parse LLM response as JSON: {e}")
-            logger.debug(f"Response text: {response_text}")
             raise ValueError(f"Invalid JSON response from LLM: {e}")
 
     def _process_mapping_result(
@@ -266,9 +253,6 @@ Important Guidelines:
             obj = self.objective_registry.get_by_id(obj_id)
             if obj:
                 objectives.append(obj)
-                logger.info(f"Matched {obligation.obligation_id} → {obj_id}")
-            else:
-                logger.warning(f"LLM referenced non-existent objective: {obj_id}")
 
         # Process new objectives
         new_objectives_data = result.get("new_objectives", [])
@@ -319,15 +303,9 @@ Important Guidelines:
             # Add to registry (persists to JSON)
             self.objective_registry.add_objective(objective)
 
-            logger.info(
-                f"Generated new objective: {new_id} for obligation {source_obligation.obligation_id}"
-            )
-
             return objective
 
         except Exception as e:
-            logger.error(f"Failed to create objective from LLM data: {e}")
-            logger.debug(f"Objective data: {obj_data}")
             return None
 
     @observe(name="map_obligations_to_objectives_batch")
@@ -348,23 +326,17 @@ Important Guidelines:
         Returns:
             Dictionary mapping obligation_id to list of objectives
         """
-        logger.info(f"Mapping {len(obligations)} obligations to objectives")
 
         mapping = {}
         for obligation in obligations:
             objectives = self.map_obligation(obligation, generation_id)
             mapping[obligation.obligation_id] = objectives
 
-        # Log summary
+        # Calculate summary statistics
         total_objectives = sum(len(objs) for objs in mapping.values())
         unique_objectives = set()
         for objs in mapping.values():
             unique_objectives.update(obj.objective_id for obj in objs)
-
-        logger.info(
-            f"Mapped {len(obligations)} obligations to {len(unique_objectives)} unique objectives "
-            f"({total_objectives} total mappings)"
-        )
 
         # Update trace
         langfuse_context.update_current_observation(

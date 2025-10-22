@@ -1,6 +1,5 @@
 """Control generation agent using two-stage LLM-driven system."""
 
-import logging
 import uuid
 from datetime import datetime
 from typing import Dict, List, Optional
@@ -19,8 +18,6 @@ from agent_sdk.models.compliance import (
 from agent_sdk.registries.objective_registry import ObjectiveRegistry
 from agent_sdk.registries.variant_registry import VariantRegistry
 from agent_sdk.utils.config import Config
-
-logger = logging.getLogger(__name__)
 
 
 class ControlGenerationAgent:
@@ -52,12 +49,6 @@ class ControlGenerationAgent:
         self.obligation_mapper = LLMObligationMapper(self.objective_registry, config)
         self.variant_mapper = LLMVariantMapper(self.variant_registry, config)
 
-        logger.info(
-            f"Initialized control generation agent with "
-            f"{len(self.objective_registry.get_all())} objectives and "
-            f"{len(self.variant_registry.get_all())} variants"
-        )
-
     @observe(name="load_obligations_from_excel")
     def load_obligations_from_excel(self, excel_path: str) -> List[Obligation]:
         """
@@ -72,8 +63,6 @@ class ControlGenerationAgent:
         Returns:
             List of Obligation objects
         """
-        logger.info(f"Loading obligations from {excel_path}")
-
         # Read Excel file
         df = pd.read_excel(excel_path, sheet_name="Obligations_register")
 
@@ -90,7 +79,6 @@ class ControlGenerationAgent:
             )
             obligations.append(obligation)
 
-        logger.info(f"Loaded {len(obligations)} obligations")
         return obligations
 
     @observe(name="stage_1_map_obligations_to_objectives")
@@ -114,22 +102,13 @@ class ControlGenerationAgent:
         Returns:
             Dictionary mapping obligation_id to list of objectives
         """
-        logger.info(f"STAGE 1: Mapping {len(obligations)} obligations to objectives")
-
         # Use LLM mapper to process all obligations
         mapping = self.obligation_mapper.map_obligations_batch(obligations, generation_id)
 
-        # Log results
-        total_objectives = sum(len(objs) for objs in mapping.values())
+        # Calculate results for tracing
         unique_objectives = set()
         for objs in mapping.values():
             unique_objectives.update(obj.objective_id for obj in objs)
-
-        logger.info(
-            f"STAGE 1 COMPLETE: {len(obligations)} obligations → "
-            f"{len(unique_objectives)} unique objectives "
-            f"({total_objectives} total mappings)"
-        )
 
         # Update trace
         langfuse_context.update_current_observation(
@@ -168,11 +147,6 @@ class ControlGenerationAgent:
         Returns:
             List of Control objects
         """
-        logger.info(
-            f"STAGE 2: Mapping {len(objectives)} objectives to control variants for context "
-            f"(employee_count={company_context.employee_count}, jurisdictions={company_context.jurisdictions})"
-        )
-
         controls = []
 
         # Build objective → obligations mapping (reverse of obligation → objectives)
@@ -185,8 +159,6 @@ class ControlGenerationAgent:
 
         # Process each objective
         for objective in objectives:
-            logger.info(f"Processing objective: {objective.objective_id}")
-
             # Get linked obligation IDs
             linked_obligation_ids = objective_to_obligations.get(objective.objective_id, [])
 
@@ -199,7 +171,6 @@ class ControlGenerationAgent:
             )
 
             if not variant:
-                logger.warning(f"No variant found/generated for objective {objective.objective_id}")
                 continue
 
             # Stage 2b: Select size variant and build control
@@ -212,9 +183,6 @@ class ControlGenerationAgent:
 
             if control:
                 controls.append(control)
-                logger.info(f"Generated control: {control.control_id}")
-
-        logger.info(f"STAGE 2 COMPLETE: {len(objectives)} objectives → {len(controls)} controls")
 
         # Update trace
         langfuse_context.update_current_observation(
@@ -248,11 +216,6 @@ class ControlGenerationAgent:
         Returns:
             List of generated Control objects
         """
-        logger.info(
-            f"Generating controls for {len(obligations)} obligations "
-            f"(two-stage LLM system)"
-        )
-
         # Stage 1: Obligations → Objectives
         obligation_to_objectives = self.stage_1_map_obligations_to_objectives(
             obligations,
@@ -273,11 +236,6 @@ class ControlGenerationAgent:
             company_context,
             obligation_to_objectives,
             generation_id
-        )
-
-        logger.info(
-            f"Control generation complete: {len(obligations)} obligations → "
-            f"{len(objectives_list)} objectives → {len(controls)} controls"
         )
 
         return controls
@@ -303,8 +261,6 @@ class ControlGenerationAgent:
         # Generate unique ID if not provided
         if generation_id is None:
             generation_id = f"gen_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:6]}"
-
-        logger.info(f"Starting control generation run: {generation_id}")
 
         # Load obligations
         obligations = self.load_obligations_from_excel(excel_path)
@@ -332,8 +288,6 @@ class ControlGenerationAgent:
                 "num_controls_generated": len(controls),
             }
         )
-
-        logger.info(f"Control generation run {generation_id} complete: {len(controls)} controls")
 
         return controls
 

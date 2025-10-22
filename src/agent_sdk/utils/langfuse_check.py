@@ -1,6 +1,5 @@
 """Langfuse availability checker for example scripts."""
 
-import logging
 import sys
 import urllib.request
 from typing import Optional
@@ -8,7 +7,6 @@ from typing import Optional
 from agent_sdk.utils.config import Config
 
 # Configure logger for this module
-logger = logging.getLogger(__name__)
 
 
 class LangfuseNotAvailableError(Exception):
@@ -27,11 +25,6 @@ def _mask_key(key: Optional[str]) -> str:
 
 def _print_config_status(config: Config) -> None:
     """Print current Langfuse configuration for debugging."""
-    logger.info("\n🔍 Langfuse Connection Configuration:")
-    logger.info(f"   Host:       {config.langfuse_host}")
-    logger.info(f"   Public Key: {_mask_key(config.langfuse_public_key)}")
-    logger.info(f"   Secret Key: {_mask_key(config.langfuse_secret_key)}")
-    logger.info("")
 
 
 def check_langfuse_available(exit_on_failure: bool = True) -> bool:
@@ -92,25 +85,21 @@ def check_langfuse_available(exit_on_failure: bool = True) -> bool:
             "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         )
         if exit_on_failure:
-            logger.error(error_msg)
             sys.exit(1)
         else:
             raise LangfuseNotAvailableError(error_msg)
 
     # Check 2: Service reachable
-    logger.info(f"🔌 Testing connection to {config.langfuse_host}...")
     try:
         response = urllib.request.urlopen(config.langfuse_host, timeout=5)
         status_code = response.getcode()
         response.close()
 
-        logger.info(f"✅ Connected successfully (HTTP {status_code})\n")
         return True
 
     except urllib.error.HTTPError as e:
         # HTTP error but server is reachable
         if e.code in [200, 301, 302, 404]:
-            logger.info(f"✅ Langfuse server is reachable (HTTP {e.code})\n")
             return True
 
         error_msg = (
@@ -134,7 +123,6 @@ def check_langfuse_available(exit_on_failure: bool = True) -> bool:
             "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         )
         if exit_on_failure:
-            logger.error(error_msg)
             sys.exit(1)
         else:
             raise LangfuseNotAvailableError(error_msg)
@@ -166,7 +154,6 @@ def check_langfuse_available(exit_on_failure: bool = True) -> bool:
             "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         )
         if exit_on_failure:
-            logger.error(error_msg)
             sys.exit(1)
         else:
             raise LangfuseNotAvailableError(error_msg)
@@ -193,7 +180,6 @@ def check_langfuse_available(exit_on_failure: bool = True) -> bool:
             "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         )
         if exit_on_failure:
-            logger.error(error_msg)
             sys.exit(1)
         else:
             raise LangfuseNotAvailableError(error_msg)
