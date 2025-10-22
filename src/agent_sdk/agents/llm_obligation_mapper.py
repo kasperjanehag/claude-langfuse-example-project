@@ -1,12 +1,12 @@
 """LLM-driven mapping from obligations to control objectives (Stage 1)."""
 
-import json
 from typing import Dict, List, Optional
 
 import openai
 from langfuse.decorators import langfuse_context, observe
 
 from agent_sdk.models.compliance import ControlObjective, Obligation
+from agent_sdk.models.llm_responses import NewObjectiveData, ObligationMappingResponse
 from agent_sdk.registries.objective_registry import ObjectiveRegistry
 from agent_sdk.utils.config import Config
 
@@ -81,23 +81,21 @@ class LLMObligationMapper:
             }
         )
 
-        # Call OpenAI
+        # Call OpenAI with structured output
         try:
-            response = self.client.chat.completions.create(
+            completion = self.client.beta.chat.completions.parse(
                 model=self.config.model,
                 # Note: temperature not specified - using model default
                 max_completion_tokens=4000,
-                messages=[{"role": "user", "content": prompt}]
+                messages=[{"role": "user", "content": prompt}],
+                response_format=ObligationMappingResponse,
             )
 
-            # Extract text from response
-            response_text = response.choices[0].message.content
-
-            # Parse structured JSON output
-            result = self._parse_llm_response(response_text)
+            # Extract parsed Pydantic object
+            response = completion.choices[0].message.parsed
 
             # Process results
-            objectives = self._process_mapping_result(result, obligation, generation_id)
+            objectives = self._process_mapping_result(response, obligation, generation_id)
 
             # Update trace
             langfuse_context.update_current_observation(
@@ -194,41 +192,9 @@ Important Guidelines:
 
         return "\n".join(lines)
 
-    def _parse_llm_response(self, response_text: str) -> Dict:
-        """
-        Parse JSON response from LLM.
-
-        Args:
-            response_text: Raw text response from Claude
-
-        Returns:
-            Parsed JSON dictionary
-
-        Raises:
-            ValueError: If JSON parsing fails
-        """
-        try:
-            # Find JSON in response (might have markdown code blocks)
-            if "```json" in response_text:
-                json_start = response_text.find("```json") + 7
-                json_end = response_text.find("```", json_start)
-                json_text = response_text[json_start:json_end].strip()
-            elif "```" in response_text:
-                json_start = response_text.find("```") + 3
-                json_end = response_text.find("```", json_start)
-                json_text = response_text[json_start:json_end].strip()
-            else:
-                json_text = response_text.strip()
-
-            result = json.loads(json_text)
-            return result
-
-        except json.JSONDecodeError as e:
-            raise ValueError(f"Invalid JSON response from LLM: {e}")
-
     def _process_mapping_result(
         self,
-        result: Dict,
+        result: ObligationMappingResponse,
         obligation: Obligation,
         generation_id: Optional[str]
     ) -> List[ControlObjective]:
@@ -238,7 +204,7 @@ Important Guidelines:
         Handles both matched objectives and newly generated objectives.
 
         Args:
-            result: Parsed JSON result from LLM
+            result: Parsed Pydantic response from LLM
             obligation: Original obligation being mapped
             generation_id: Optional generation ID
 
@@ -248,15 +214,13 @@ Important Guidelines:
         objectives = []
 
         # Process matched objectives
-        matched_ids = result.get("matched_objective_ids", [])
-        for obj_id in matched_ids:
+        for obj_id in result.matched_objective_ids:
             obj = self.objective_registry.get_by_id(obj_id)
             if obj:
                 objectives.append(obj)
 
         # Process new objectives
-        new_objectives_data = result.get("new_objectives", [])
-        for new_obj_data in new_objectives_data:
+        for new_obj_data in result.new_objectives:
             new_obj = self._create_and_register_objective(
                 new_obj_data,
                 obligation,
@@ -269,7 +233,7 @@ Important Guidelines:
 
     def _create_and_register_objective(
         self,
-        obj_data: Dict,
+        obj_data: NewObjectiveData,
         source_obligation: Obligation,
         generation_id: Optional[str]
     ) -> Optional[ControlObjective]:
@@ -277,7 +241,7 @@ Important Guidelines:
         Create new objective from LLM data and add to registry.
 
         Args:
-            obj_data: Dictionary with objective fields
+            obj_data: Pydantic model with objective fields
             source_obligation: Obligation that triggered this creation
             generation_id: Optional generation ID
 
@@ -286,18 +250,18 @@ Important Guidelines:
         """
         try:
             # Generate new ID
-            domain = obj_data.get("domain", source_obligation.domain or "General")
+            domain = obj_data.domain or source_obligation.domain or "General"
             new_id = self.objective_registry.generate_next_id(domain)
 
             # Create objective
             objective = ControlObjective(
                 objective_id=new_id,
-                objective_name=obj_data["objective_name"],
-                description=obj_data["description"],
+                objective_name=obj_data.objective_name,
+                description=obj_data.description,
                 domain=domain,
-                intent=obj_data.get("intent", ""),
+                intent=obj_data.intent,
                 linked_obligation_ids=[source_obligation.obligation_id],
-                rationale=obj_data.get("rationale")
+                rationale=obj_data.rationale
             )
 
             # Add to registry (persists to JSON)

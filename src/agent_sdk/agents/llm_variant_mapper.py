@@ -1,12 +1,12 @@
 """LLM-driven mapping from objectives + context to control variants (Stage 2)."""
 
-import json
 from typing import Dict, List, Optional
 
 import openai
 from langfuse.decorators import langfuse_context, observe
 
 from agent_sdk.models.compliance import CompanyContext, Control, ControlObjective, ControlVariant
+from agent_sdk.models.llm_responses import NewVariantData, VariantMappingResponse
 from agent_sdk.registries.variant_registry import VariantRegistry
 from agent_sdk.utils.config import Config
 
@@ -88,26 +88,22 @@ class LLMVariantMapper:
             }
         )
 
-        # Call OpenAI
+        # Call OpenAI with structured output
         try:
-            response = self.client.chat.completions.create(
+            completion = self.client.beta.chat.completions.parse(
                 model=self.config.model,
                 # Note: temperature not specified - using model default
                 max_completion_tokens=6000,
-                messages=[{"role": "user", "content": prompt}]
+                messages=[{"role": "user", "content": prompt}],
+                response_format=VariantMappingResponse,
             )
 
-            # Extract text from response
-            response_text = response.choices[0].message.content
-
-            # Parse structured JSON output
-            result = self._parse_llm_response(response_text)
-
-            # Log LLM decision
+            # Extract parsed Pydantic object
+            response = completion.choices[0].message.parsed
 
             # Process result
             variant = self._process_mapping_result(
-                result,
+                response,
                 objective,
                 company_context,
                 linked_obligation_ids,
@@ -256,41 +252,9 @@ Important Guidelines:
 
         return ",\n".join(lines) if lines else '        "EU": ["Example requirement"]'
 
-    def _parse_llm_response(self, response_text: str) -> Dict:
-        """
-        Parse JSON response from LLM.
-
-        Args:
-            response_text: Raw text response from Claude
-
-        Returns:
-            Parsed JSON dictionary
-
-        Raises:
-            ValueError: If JSON parsing fails
-        """
-        try:
-            # Find JSON in response (might have markdown code blocks)
-            if "```json" in response_text:
-                json_start = response_text.find("```json") + 7
-                json_end = response_text.find("```", json_start)
-                json_text = response_text[json_start:json_end].strip()
-            elif "```" in response_text:
-                json_start = response_text.find("```") + 3
-                json_end = response_text.find("```", json_start)
-                json_text = response_text[json_start:json_end].strip()
-            else:
-                json_text = response_text.strip()
-
-            result = json.loads(json_text)
-            return result
-
-        except json.JSONDecodeError as e:
-            raise ValueError(f"Invalid JSON response from LLM: {e}")
-
     def _process_mapping_result(
         self,
-        result: Dict,
+        result: VariantMappingResponse,
         objective: ControlObjective,
         company_context: CompanyContext,
         linked_obligation_ids: List[str],
@@ -302,7 +266,7 @@ Important Guidelines:
         Handles both matched variants and newly generated variants.
 
         Args:
-            result: Parsed JSON result from LLM
+            result: Parsed Pydantic response from LLM
             objective: Control objective being mapped
             company_context: Company context
             linked_obligation_ids: Obligation IDs
@@ -312,17 +276,15 @@ Important Guidelines:
             ControlVariant object or None
         """
         # Check for matched variant
-        matched_ids = result.get("matched_variant_ids", [])
-        if matched_ids:
-            variant_id = matched_ids[0]  # Take first match
+        if result.matched_variant_ids:
+            variant_id = result.matched_variant_ids[0]  # Take first match
             variant = self.variant_registry.get_by_id(variant_id)
             if variant:
                 return variant
 
         # Check for new variant
-        new_variants_data = result.get("new_variants", [])
-        if new_variants_data:
-            new_variant_data = new_variants_data[0]  # Take first new variant
+        if result.new_variants:
+            new_variant_data = result.new_variants[0]  # Take first new variant
             variant = self._create_and_register_variant(
                 new_variant_data,
                 objective,
@@ -334,7 +296,7 @@ Important Guidelines:
 
     def _create_and_register_variant(
         self,
-        var_data: Dict,
+        var_data: NewVariantData,
         objective: ControlObjective,
         generation_id: Optional[str]
     ) -> Optional[ControlVariant]:
@@ -342,7 +304,7 @@ Important Guidelines:
         Create new variant from LLM data and add to registry.
 
         Args:
-            var_data: Dictionary with variant fields
+            var_data: Pydantic model with variant fields
             objective: Objective this variant implements
             generation_id: Optional generation ID
 
@@ -353,20 +315,19 @@ Important Guidelines:
             # Generate new ID
             new_id = self.variant_registry.generate_next_id(objective.objective_id)
 
-            # Create variant
+            # Create variant - convert Pydantic list to list of dicts
             variant = ControlVariant(
                 variant_id=new_id,
                 objective_id=objective.objective_id,
-                variant_name=var_data["variant_name"],
-                base_description=var_data["base_description"],
+                variant_name=var_data.variant_name,
+                base_description=var_data.base_description,
                 domain=objective.domain,
-                variants=var_data["variants"],
-                jurisdiction_requirements=var_data.get("jurisdiction_requirements", {})
+                variants=[v.model_dump() for v in var_data.variants],
+                jurisdiction_requirements=var_data.jurisdiction_requirements
             )
 
             # Add to registry (persists to JSON)
             self.variant_registry.add_variant(variant)
-
 
             return variant
 
