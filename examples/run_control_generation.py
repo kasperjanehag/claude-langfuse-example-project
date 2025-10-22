@@ -44,13 +44,6 @@ def main():
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     generation_id = f"gen_{timestamp}_{uuid.uuid4().hex[:6]}"
 
-    print("=" * 70)
-    print("Two-Stage LLM-Driven Control Generation System")
-    print("=" * 70)
-    print(f"\nGeneration ID: {generation_id}\n")
-    print("Architecture:")
-    print("  Stage 1: Obligations → Control Objectives (LLM semantic mapping)")
-    print("  Stage 2: Objectives + Context → Control Variants → Controls\n")
 
     # Initialize config and agent
     config = Config()
@@ -70,8 +63,6 @@ def main():
             generation_id=generation_id,
         )
 
-        print(f"\nGenerated {len(controls)} controls")
-        print(f"Generation ID: {generation_id}")
 
         # Save to JSON
         output_dir = Path(config.generated_controls_dir)
@@ -100,19 +91,10 @@ def main():
         with open(output_file, "w") as f:
             json.dump(controls_data, f, indent=2)
 
-        print(f"\nControls saved to: {output_file}")
-        print(f"View traces in Langfuse: http://localhost:3000")
 
     except FileNotFoundError as e:
-        print(f"\nError: Obligations file not found - {e}")
-        print(f"Make sure the obligations Excel file exists at: {config.obligations_excel_path}")
         sys.exit(1)
     except Exception as e:
-        print(f"\nError generating controls: {str(e)}")
-        print("\nTroubleshooting:")
-        print("  1. Verify Langfuse is running (docker compose up -d)")
-        print("  2. Check your .env file has correct LANGFUSE_* and OPENAI_* keys")
-        print("  3. Ensure obligations Excel file exists and is readable")
         raise
 
 
