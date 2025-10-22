@@ -1,0 +1,18 @@
+{
+  "metadata": {
+    "generation_id": "gen_20251022_083352_2cc702",
+    "generated_at": "2025-10-22T08:34:41.925134",
+    "company_name": "Acme Corporation",
+    "employee_count": 250,
+    "industry": "SaaS",
+    "jurisdictions": [
+      "SE",
+      "EU"
+    ],
+    "risk_appetite": "Low",
+    "compliance_maturity": "Developing",
+    "num_controls": 0,
+    "generation_method": "objectives_variants"
+  },
+  "controls": []
+}

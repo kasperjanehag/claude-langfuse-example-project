@@ -121,8 +121,19 @@ class LLMVariantMapper:
             return variant
 
         except Exception as e:
+            import traceback
+            error_details = f"{type(e).__name__}: {str(e)}\n{traceback.format_exc()}"
+            print(f"\n{'='*70}")
+            print(f"ERROR in map_objective_to_variant for {objective.objective_id}:")
+            print(error_details)
+            print(f"{'='*70}\n")
+
             langfuse_context.update_current_observation(
-                metadata={"error": str(e)}
+                metadata={
+                    "error": str(e),
+                    "error_type": type(e).__name__,
+                    "traceback": traceback.format_exc()
+                }
             )
             return None
 
@@ -323,7 +334,7 @@ Important Guidelines:
                 base_description=var_data.base_description,
                 domain=objective.domain,
                 variants=[v.model_dump() for v in var_data.variants],
-                jurisdiction_requirements=var_data.jurisdiction_requirements
+                jurisdiction_requirements=var_data.jurisdiction_requirements or {}
             )
 
             # Add to registry (persists to JSON)

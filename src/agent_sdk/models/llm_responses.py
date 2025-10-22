@@ -1,6 +1,6 @@
 """Pydantic models for LLM structured output responses."""
 
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -24,12 +24,12 @@ class ObligationMappingResponse(BaseModel):
     """Structured response from LLM for obligation → objectives mapping."""
 
     analysis: str = Field(description="Brief analysis of what this obligation requires (2-3 sentences)")
-    matched_objective_ids: List[str] = Field(
-        default_factory=list,
+    matched_objective_ids: Optional[List[str]] = Field(
+        default=None,
         description="Array of objective IDs that match (empty if none)"
     )
-    new_objectives: List[NewObjectiveData] = Field(
-        default_factory=list,
+    new_objectives: Optional[List[NewObjectiveData]] = Field(
+        default=None,
         description="Array of new objectives to create (empty if none needed)"
     )
     reasoning: str = Field(description="Explanation of matching and generation decisions (2-3 sentences)")
@@ -56,8 +56,8 @@ class NewVariantData(BaseModel):
     variant_name: str = Field(description="Descriptive implementation name")
     base_description: str = Field(description="Core control description (applies to all sizes)")
     variants: List[SizeVariantData] = Field(description="Size-specific variants (startup/SME/enterprise)")
-    jurisdiction_requirements: Dict[str, List[str]] = Field(
-        default_factory=dict,
+    jurisdiction_requirements: Optional[Dict[str, List[str]]] = Field(
+        default=None,
         description="Jurisdiction-specific requirements by country/region code"
     )
 
@@ -66,12 +66,12 @@ class VariantMappingResponse(BaseModel):
     """Structured response from LLM for objective + context → variants mapping."""
 
     analysis: str = Field(description="Brief analysis of what implementation is needed (2-3 sentences)")
-    matched_variant_ids: List[str] = Field(
-        default_factory=list,
+    matched_variant_ids: Optional[List[str]] = Field(
+        default=None,
         description="Array with ONE variant ID if match found, empty if no match"
     )
-    new_variants: List[NewVariantData] = Field(
-        default_factory=list,
+    new_variants: Optional[List[NewVariantData]] = Field(
+        default=None,
         description="Array with ONE new variant if needed, empty if matched existing"
     )
     reasoning: str = Field(description="Explanation of matching or generation decision (2-3 sentences)")

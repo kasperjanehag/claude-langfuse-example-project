@@ -108,8 +108,19 @@ class LLMObligationMapper:
             return objectives
 
         except Exception as e:
+            import traceback
+            error_details = f"{type(e).__name__}: {str(e)}\n{traceback.format_exc()}"
+            print(f"\n{'='*70}")
+            print(f"ERROR in map_obligation for {obligation.obligation_id}:")
+            print(error_details)
+            print(f"{'='*70}\n")
+
             langfuse_context.update_current_observation(
-                metadata={"error": str(e)}
+                metadata={
+                    "error": str(e),
+                    "error_type": type(e).__name__,
+                    "traceback": traceback.format_exc()
+                }
             )
             return []
 
@@ -214,13 +225,13 @@ Important Guidelines:
         objectives = []
 
         # Process matched objectives
-        for obj_id in result.matched_objective_ids:
+        for obj_id in result.matched_objective_ids or []:
             obj = self.objective_registry.get_by_id(obj_id)
             if obj:
                 objectives.append(obj)
 
         # Process new objectives
-        for new_obj_data in result.new_objectives:
+        for new_obj_data in result.new_objectives or []:
             new_obj = self._create_and_register_objective(
                 new_obj_data,
                 obligation,
