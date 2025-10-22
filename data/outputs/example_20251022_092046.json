@@ -1,0 +1,33 @@
+[
+  {
+    "id": "result-item-001",
+    "input_id": "item-001",
+    "result": "Item contains two sentences: a pangram commonly used for testing and a simple statement about testing. The content is descriptive and task-oriented with no persuasive or emotional language.",
+    "confidence": 0.9,
+    "details": {
+      "key_points": [
+        "Sentence 1 is the pangram: 'The quick brown fox jumps over the lazy dog.'",
+        "Sentence 2 states: 'This is a simple example sentence for testing purposes.'",
+        "Metadata indicates source 'example-system' and priority 'high', suggesting urgency or importance of the item."
+      ],
+      "sentiment": "neutral",
+      "reasoning": "There are no sentiment-bearing words; the text is factual and instructional. The first sentence is a widely known pangram used for testing typography, and the second sentence explicitly mentions testing purposes, indicating an informational, non-emotional intent. The metadata confirms context but does not alter the neutral sentiment."
+    }
+  },
+  {
+    "id": "result-item-002",
+    "input_id": "item-002",
+    "result": "This item states that machine learning and artificial intelligence are transforming how we work and live, signaling broad and ongoing impact. It uses a high-level, positive framing without providing specifics or measurable claims. The accompanying metadata indicates a neutral-to-medium priority context, suggesting this statement may be intended for general awareness or a starting point for further analysis.",
+    "confidence": 0.78,
+    "details": {
+      "key_points": [
+        "ML/AI are transforming work and daily life",
+        "Impact described as broad and ongoing",
+        "Statement is high-level with no concrete metrics or examples",
+        "Metadata shows source 'example-system' and priority 'medium'"
+      ],
+      "sentiment": "positive",
+      "reasoning": "The content presents a favorable view of ML/AI's effects without citing evidence or specifics, implying a positive sentiment. The lack of concrete details means interpretation relies on common associations with 'transforming' and 'AI/ML' in modern discourse; metadata provides minimal additional context."
+    }
+  }
+]

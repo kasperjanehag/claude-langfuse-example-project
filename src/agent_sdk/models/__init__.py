@@ -1,17 +1,13 @@
-"""Data models for the agent SDK - Simplified."""
+"""Data models for your domain - Example Template."""
 
-from agent_sdk.models.compliance import (
-    CompanyContext,
-    Control,
-    ControlObjective,
-    ControlVariant,
-    Obligation,
+from agent_sdk.models.domain_models import (
+    InputItem,
+    ProcessedItem,
+    ProcessingContext,
 )
 
 __all__ = [
-    "Obligation",
-    "ControlObjective",
-    "ControlVariant",
-    "Control",
-    "CompanyContext",
+    "InputItem",
+    "ProcessedItem",
+    "ProcessingContext",
 ]

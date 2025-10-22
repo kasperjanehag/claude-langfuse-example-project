@@ -16,14 +16,14 @@ dev-dependencies = [
 [project]
 name = "agent-sdk"
 version = "0.1.0"
-description = "Receipt inspection agent demonstrating eval-driven development with Claude and Langfuse"
+description = "Starter template for building LLM agents with OpenAI structured outputs, Pydantic, and Langfuse"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
 authors = [
     {name = "Your Name", email = "your.email@example.com"}
 ]
-keywords = ["llm", "agents", "evaluations", "langfuse", "observability", "receipt-inspection"]
+keywords = ["llm", "agents", "openai", "langfuse", "observability", "pydantic", "structured-outputs", "template"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",

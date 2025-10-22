@@ -1,77 +1,72 @@
-"""Pydantic models for LLM structured output responses."""
+"""
+Pydantic models for LLM structured output responses - Example Template.
 
-from typing import Dict, List, Optional
+These models define what structure you want the LLM to return.
+When using OpenAI's structured outputs, the LLM will return a JSON
+that matches these Pydantic models exactly.
+
+CUSTOMIZE THIS:
+- Define response models that match what you need from the LLM
+- Use Field() to provide descriptions that help the LLM understand what to return
+"""
+
+from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
 
-# ============================================================================
-# Stage 1: Obligation → Objectives Mapping Response Models
-# ============================================================================
+class ExampleAnalysisResponse(BaseModel):
+    """
+    Example LLM response model for analysis tasks.
 
+    Replace this with your own response structure.
+    """
 
-class NewObjectiveData(BaseModel):
-    """Data for a newly generated control objective."""
-
-    objective_name: str = Field(description="Clear, reusable name for the objective")
-    description: str = Field(description="What systematic capability this establishes")
-    domain: str = Field(description="Security/compliance domain")
-    intent: str = Field(description="Why this objective matters from control perspective")
-    rationale: str = Field(description="Why this is needed as a separate objective")
-
-
-class ObligationMappingResponse(BaseModel):
-    """Structured response from LLM for obligation → objectives mapping."""
-
-    analysis: str = Field(description="Brief analysis of what this obligation requires (2-3 sentences)")
-    matched_objective_ids: Optional[List[str]] = Field(
+    summary: str = Field(description="Brief summary of the analysis (2-3 sentences)")
+    key_points: Optional[List[str]] = Field(
         default=None,
-        description="Array of objective IDs that match (empty if none)"
+        description="List of key points identified"
     )
-    new_objectives: Optional[List[NewObjectiveData]] = Field(
+    sentiment: Optional[str] = Field(
         default=None,
-        description="Array of new objectives to create (empty if none needed)"
+        description="Overall sentiment: positive, negative, or neutral"
     )
-    reasoning: str = Field(description="Explanation of matching and generation decisions (2-3 sentences)")
-
-
-# ============================================================================
-# Stage 2: Objective + Context → Variants Mapping Response Models
-# ============================================================================
-
-
-class SizeVariantData(BaseModel):
-    """Data for a single size-specific variant (startup/SME/enterprise)."""
-
-    variant_type: str = Field(description="Size category: startup, sme, or enterprise")
-    applies_if: str = Field(description="Condition expression (e.g., 'employee_count < 50')")
-    description_additions: str = Field(description="Size-specific implementation details")
-    evidence_requirements: List[str] = Field(description="Evidence needed for this size variant")
-    review_interval: str = Field(description="How often to review (e.g., '6 months')")
-
-
-class NewVariantData(BaseModel):
-    """Data for a newly generated control variant."""
-
-    variant_name: str = Field(description="Descriptive implementation name")
-    base_description: str = Field(description="Core control description (applies to all sizes)")
-    variants: List[SizeVariantData] = Field(description="Size-specific variants (startup/SME/enterprise)")
-    jurisdiction_requirements: Optional[Dict[str, List[str]]] = Field(
+    confidence: Optional[float] = Field(
         default=None,
-        description="Jurisdiction-specific requirements by country/region code"
+        description="Confidence score between 0.0 and 1.0"
     )
+    reasoning: str = Field(description="Explanation of the analysis (2-3 sentences)")
 
 
-class VariantMappingResponse(BaseModel):
-    """Structured response from LLM for objective + context → variants mapping."""
+class ExampleClassificationResponse(BaseModel):
+    """
+    Example LLM response model for classification tasks.
 
-    analysis: str = Field(description="Brief analysis of what implementation is needed (2-3 sentences)")
-    matched_variant_ids: Optional[List[str]] = Field(
+    Replace this with your own response structure.
+    """
+
+    category: str = Field(description="The primary category")
+    subcategories: Optional[List[str]] = Field(
         default=None,
-        description="Array with ONE variant ID if match found, empty if no match"
+        description="List of subcategories if applicable"
     )
-    new_variants: Optional[List[NewVariantData]] = Field(
+    confidence: float = Field(description="Confidence score between 0.0 and 1.0")
+    explanation: str = Field(description="Why this classification was chosen (2-3 sentences)")
+
+
+class ExampleExtractionResponse(BaseModel):
+    """
+    Example LLM response model for information extraction tasks.
+
+    Replace this with your own response structure.
+    """
+
+    entities: Optional[List[dict]] = Field(
         default=None,
-        description="Array with ONE new variant if needed, empty if matched existing"
+        description="List of entities found, each with 'type', 'value', and 'context'"
     )
-    reasoning: str = Field(description="Explanation of matching or generation decision (2-3 sentences)")
+    relationships: Optional[List[dict]] = Field(
+        default=None,
+        description="List of relationships found, each with 'source', 'relation', 'target'"
+    )
+    summary: str = Field(description="Summary of extracted information")

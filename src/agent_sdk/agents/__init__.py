@@ -1,5 +1,5 @@
-"""Agent implementations."""
+"""Agent implementations - Example Template."""
 
-from agent_sdk.agents.control_generation import ControlGenerationAgent
+from agent_sdk.agents.example_llm_agent import ExampleLLMAgent
 
-__all__ = ["ControlGenerationAgent"]
+__all__ = ["ExampleLLMAgent"]

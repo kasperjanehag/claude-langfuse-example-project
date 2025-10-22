@@ -1,0 +1,18 @@
+[
+  {
+    "id": "item-001",
+    "content": "The quick brown fox jumps over the lazy dog. This is a simple example sentence for testing purposes.",
+    "metadata": {
+      "source": "example-system",
+      "priority": "high"
+    }
+  },
+  {
+    "id": "item-002",
+    "content": "Machine learning and artificial intelligence are transforming how we work and live.",
+    "metadata": {
+      "source": "example-system",
+      "priority": "medium"
+    }
+  }
+]

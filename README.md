@@ -1,301 +1,277 @@
-# Two-Stage LLM-Driven Control Generation System
+# LLM Agent Template
 
-A compliance control generation system that uses OpenAI to transform legal obligations into context-aware, actionable controls through intelligent semantic mapping.
+A starter template for building LLM-powered agents using OpenAI structured outputs, Pydantic models, and Langfuse observability.
 
-## Overview
+## What This Template Provides
 
-This system uses a two-stage LLM-driven approach to generate tailored security and privacy controls:
+This template demonstrates best practices for building LLM agents:
 
-**Stage 1: Obligations → Control Objectives** (Semantic Mapping Layer)
-- LLM analyzes each obligation to understand its semantic intent
-- Matches to existing objectives in registry OR generates new objectives
-- Supports multi-objective mapping (1 obligation → N objectives)
-- Builds a stable, reusable semantic layer
-
-**Stage 2: Objectives + Context → Control Variants → Controls** (Implementation Layer)
-- LLM evaluates objectives with company context
-- Matches to existing variants in registry OR generates new variants
-- Selects appropriate size variant (startup/SME/enterprise)
-- Applies jurisdiction-specific requirements
-- Generates final controls
-
-## Architecture
-
-```
-┌─────────────────────────────────────────────────────────┐
-│  STAGE 1: Obligations → Control Objectives              │
-│  (Context-less semantic understanding)                  │
-│                                                          │
-│  LLM Obligation Mapper:                                 │
-│  - Analyzes obligation intent                           │
-│  - Matches existing objectives OR                       │
-│  - Generates new objectives                             │
-│  - Auto-adds to registry                                │
-└─────────────────────────────────────────────────────────┘
-                        ↓
-        [Control Objectives Registry]
-        (Stable semantic layer - grows over time)
-                        ↓
-┌─────────────────────────────────────────────────────────┐
-│  STAGE 2: Objectives + Context → Control Variants       │
-│  (Context-aware implementation selection)               │
-│                                                          │
-│  LLM Variant Mapper:                                    │
-│  - Matches existing variants OR                         │
-│  - Generates new variants                               │
-│  - Selects size variant                                 │
-│  - Applies jurisdiction requirements                    │
-│  - Auto-adds to registry                                │
-└─────────────────────────────────────────────────────────┘
-                        ↓
-                   Controls
-```
-
-## Key Features
-
-### LLM-Driven Mapping
-- **Semantic Understanding**: OpenAI analyzes obligation text to understand true intent, not just keywords
-- **Multi-Objective Support**: Complex obligations can map to multiple objectives
-- **Automatic Generation**: LLM creates new objectives/variants when no good match exists
-- **Deterministic**: Temperature=0 ensures consistent mappings
-
-### Growing Registries
-- **Objective Registry** (`data/control_registry/objectives.json`):
-  - Stores all control objectives (context-less semantic layer)
-  - Grows as LLM encounters new obligation types
-  - Becomes more comprehensive over time
-
-- **Variant Registry** (`data/control_registry/control_variants.json`):
-  - Stores control implementation variants
-  - Each variant has startup/SME/enterprise size options
-  - Includes jurisdiction-specific requirements
-  - Grows as LLM encounters new implementation needs
-
-### Perfect World End State
-Once registries mature:
-- New obligations → fast registry lookups (no LLM needed)
-- Same obligations always → same objectives (consistency)
-- Any company context → deterministic variant selection
-- System becomes instant and cost-free
-
-## Key Models
-
-- **Obligation**: Legal/regulatory requirement (simplified: ID, text, framework, domain)
-- **ControlObjective**: Context-less semantic abstraction with intent and rationale
-- **ControlVariant**: Implementation template with size variants and jurisdiction requirements
-- **Control**: Final generated, company-specific control
-- **CompanyContext**: Company information for tailoring (size, industry, jurisdictions)
+1. **OpenAI Structured Outputs**: Use Pydantic models to get reliable, typed responses from LLMs
+2. **Langfuse Observability**: Track all LLM calls, prompts, and responses in one place
+3. **Pydantic Models**: Type-safe data models for inputs, outputs, and LLM responses
+4. **Configuration Management**: Environment-based config using Pydantic Settings
+5. **Error Handling**: Proper error handling and logging patterns
+6. **Project Structure**: Clean, modular code organization
 
 ## Quick Start
 
 ### Prerequisites
 
-1. **OpenAI Credentials**:
-   - Configure in `.env` file:
-     - `OPENAI_API_KEY` - Your OpenAI API key
-     - `OPENAI_BASE_URL` - API endpoint (defaults to OpenAI public API)
-     - `OPENAI_MODEL` - Model to use (defaults to gpt-5-nano-2025-08-07)
+1. **OpenAI API Key**: Get from [platform.openai.com](https://platform.openai.com)
 
 2. **Langfuse** (for observability):
    ```bash
    docker compose up -d
-   # Get keys from http://localhost:3000
+   # Visit http://localhost:3000 to get API keys
    ```
 
-3. **Environment**:
+3. **Environment Variables**:
+   Create a `.env` file:
    ```bash
-   # .env file should contain:
-   # OPENAI_API_KEY=your_key
-   # OPENAI_BASE_URL=https://api.openai.com/v1  (or custom gateway)
-   # OPENAI_MODEL=gpt-5-nano-2025-08-07
-   # LANGFUSE_PUBLIC_KEY=...
-   # LANGFUSE_SECRET_KEY=...
+   OPENAI_API_KEY=your_openai_key_here
+   OPENAI_BASE_URL=https://api.openai.com/v1
+   OPENAI_MODEL=gpt-4o
+
+   LANGFUSE_PUBLIC_KEY=pk-lf-...
+   LANGFUSE_SECRET_KEY=sk-lf-...
+   LANGFUSE_HOST=http://localhost:3000
    ```
 
-4. **Dependencies**:
+4. **Install Dependencies**:
    ```bash
-   pip install openai langfuse pandas openpyxl python-dotenv pydantic-settings
+   # Using UV (recommended)
+   uv pip install -e .
+
+   # Or using pip
+   pip install -e .
    ```
 
-### Running
+### Running the Example
 
 ```bash
-python examples/run_control_generation.py
+python examples/run_example.py
 ```
 
 This will:
-1. **Stage 1**: Load 5 obligations → LLM maps to objectives
-2. **Stage 2**: Take objectives + company context → LLM generates variants & controls
-3. Save results to `data/obligations/generated_controls/`
-4. Update registries with any new objectives/variants
-5. Track everything in Langfuse at http://localhost:3000
-
-### What to Expect
-
-First run:
-- LLM will likely match some existing objectives
-- May generate a few new objectives if obligations are novel
-- May generate new variants if implementation needs differ
-- Registries will grow
-
-Subsequent runs with same obligations:
-- Should mostly match existing objectives (faster, cheaper)
-- Registries continue to grow and stabilize
-
-## Example Output
-
-From 5 GDPR obligations:
-
-```
-STAGE 1: 5 obligations → 3 unique objectives (with multi-mapping)
-STAGE 2: 3 objectives + SME context → 3 controls
-
-Generated Controls:
-- CV-FAIR-1-SME: Fairness assessment procedures
-- CV-TRANS-1-SME: Privacy notice management system
-- CV-PURPOSE-1-SME: Purpose limitation controls
-
-Registry Growth:
-- Objectives: 4 (started with 4, no new ones needed)
-- Variants: 4 (started with 4, no new ones needed)
-```
+1. Load example items from `data/inputs/example_items.json`
+2. Process them using an LLM with structured outputs
+3. Save results to `data/outputs/`
+4. Track everything in Langfuse at http://localhost:3000
 
 ## Project Structure
 
 ```
 src/agent_sdk/
 ├── models/
-│   └── compliance.py          # 5 core Pydantic models
+│   ├── domain_models.py      # Your domain models (customize these!)
+│   └── llm_responses.py      # Pydantic models for LLM responses
 ├── agents/
-│   ├── llm_obligation_mapper.py   # Stage 1: Obligations → Objectives (LLM)
-│   ├── llm_variant_mapper.py      # Stage 2: Objectives → Variants (LLM)
-│   └── control_generation.py      # Main orchestration
-├── registries/
-│   ├── objective_registry.py      # Objective storage and management
-│   └── variant_registry.py        # Variant storage and management
+│   └── example_llm_agent.py  # Example agent showing patterns
 └── utils/
-    ├── config.py                   # Configuration management
-    └── langfuse_check.py           # Langfuse connectivity check
+    ├── config.py              # Configuration management
+    └── langfuse_check.py      # Langfuse connectivity check
 
 data/
-├── control_registry/
-│   ├── objectives.json         # Control objectives registry (grows over time)
-│   └── control_variants.json   # Control variants registry (grows over time)
-└── obligations/
-    └── Obligations and Controls example.xlsx
+├── inputs/                    # Input data files
+│   └── example_items.json    # Example input data
+└── outputs/                   # Generated outputs
 
-docs/
-└── FUTURE_CONSIDERATIONS.md    # Future enhancements and design decisions
+examples/
+└── run_example.py            # Example script
 ```
 
-## How It Works
+## Key Concepts
 
-### Stage 1: Obligation → Objectives Mapping
+### 1. OpenAI Structured Outputs
 
-```python
-# LLM analyzes obligation
-obligation = "Process personal data fairly and transparently"
-
-# LLM prompt includes all existing objectives for context
-# LLM decides: Match existing OR generate new
-
-# Result: Maps to 2 existing objectives
-objectives = [
-    "OBJ-FAIR-1: Fairness in personal data processing",
-    "OBJ-TRANS-1: Transparency in data processing"
-]
-
-# If new objective needed, LLM generates:
-new_objective = {
-    "objective_name": "Clear name",
-    "description": "What capability must exist",
-    "intent": "Why this matters",
-    "rationale": "Why this is separate from existing"
-}
-# Auto-added to registry
-```
-
-### Stage 2: Objective + Context → Variants
+Instead of parsing JSON from LLM responses manually:
 
 ```python
-# LLM evaluates objective with company context
-objective = "OBJ-TRANS-1: Transparency in data processing"
-context = {
-    "employee_count": 250,  # SME
-    "jurisdictions": ["SE", "EU"]
-}
-
-# LLM decides: Match existing variant OR generate new
-
-# Result: Matches existing variant
-variant = "CV-TRANS-1" (has startup/SME/enterprise options)
-
-# Selects SME variant (applies_if: 50 <= employees < 1000)
-selected = variant.variants["sme"]
-
-# Applies Swedish jurisdiction requirements
-requirements = ["Plain Swedish language", "GDPR Art 12 compliance", ...]
-
-# Builds final control
-control = Control(
-    control_id="CV-TRANS-1-SME",
-    control_name="Privacy notice management system",
-    control_description="...",
-    expected_evidence="...",
-    review_interval="6 months"
+# ❌ Old way - fragile
+response = client.chat.completions.create(
+    model="gpt-4o",
+    messages=[{"role": "user", "content": prompt}]
 )
+result = json.loads(response.choices[0].message.content)  # Can fail!
 ```
+
+Use structured outputs with Pydantic:
+
+```python
+# ✅ New way - type-safe
+from pydantic import BaseModel, Field
+
+class AnalysisResponse(BaseModel):
+    summary: str = Field(description="Brief summary")
+    confidence: float = Field(description="Confidence 0-1")
+
+response = client.beta.chat.completions.parse(
+    model="gpt-4o",
+    messages=[{"role": "user", "content": prompt}],
+    response_format=AnalysisResponse  # Enforces structure!
+)
+result: AnalysisResponse = response.choices[0].message.parsed
+```
+
+### 2. Langfuse Observability
+
+Track all LLM interactions automatically:
+
+```python
+from langfuse.decorators import observe, langfuse_context
+
+@observe(name="my_operation")
+def process_item(item):
+    # Automatically tracked in Langfuse
+    result = llm_call(item)
+
+    # Add custom metadata
+    langfuse_context.update_current_observation(
+        metadata={"item_id": item.id}
+    )
+    return result
+```
+
+View all traces at: http://localhost:3000/traces
+
+### 3. Pydantic Models
+
+Define your data models once, get:
+- Type checking
+- Validation
+- JSON serialization/deserialization
+- Auto-generated JSON schemas for LLMs
+
+```python
+from pydantic import BaseModel, Field
+
+class InputItem(BaseModel):
+    id: str
+    content: str
+    metadata: dict = {}
+```
+
+## Customizing for Your Use Case
+
+### 1. Define Your Domain Models
+
+Edit `src/agent_sdk/models/domain_models.py`:
+- Replace `InputItem`, `ProcessedItem` with your models
+- Add fields specific to your domain
+
+### 2. Define LLM Response Structures
+
+Edit `src/agent_sdk/models/llm_responses.py`:
+- Create Pydantic models for what you want the LLM to return
+- Use `Field(description=...)` to guide the LLM
+
+### 3. Create Your Agent
+
+Copy `src/agent_sdk/agents/example_llm_agent.py`:
+- Update prompts for your task
+- Implement your business logic
+- Use `@observe` decorator for Langfuse tracking
+
+### 4. Create Your Pipeline
+
+Copy `examples/run_example.py`:
+- Load your data
+- Call your agent
+- Save results
 
 ## Configuration
 
-Key settings in `src/agent_sdk/utils/config.py`:
+All configuration is in `src/agent_sdk/utils/config.py`:
 
 ```python
-# LLM Configuration
-model = "gpt-5-nano-2025-08-07"  # or other OpenAI model
-temperature = 0.0  # Deterministic for consistency
-openai_base_url = "https://api.openai.com/v1"  # or custom gateway
-
-# Registry Paths
-objectives_registry = "data/control_registry/objectives.json"
-variants_registry = "data/control_registry/control_variants.json"
-
-# Obligations Source
-obligations_excel = "data/obligations/Obligations and Controls example.xlsx"
+class Config(BaseSettings):
+    openai_api_key: str
+    openai_base_url: str
+    model: str
+    langfuse_public_key: str
+    langfuse_secret_key: str
+    # Add your own config fields...
 ```
+
+Load from environment or `.env` file automatically.
+
+## Best Practices
+
+### Error Handling
+
+Always wrap LLM calls in try/except:
+
+```python
+try:
+    result = client.beta.chat.completions.parse(...)
+except Exception as e:
+    # Log to Langfuse
+    langfuse_context.update_current_observation(
+        metadata={"error": str(e)}
+    )
+    # Handle error
+    return None
+```
+
+### Prompt Engineering
+
+Use the Field descriptions - the LLM sees them:
+
+```python
+class Response(BaseModel):
+    category: str = Field(
+        description="Primary category: tech, business, or personal"
+    )
+    # LLM will see this description and follow it!
+```
+
+### Testing
+
+Test with Langfuse:
+1. Run your agent
+2. Check Langfuse UI for traces
+3. Verify prompts, responses, metadata
+4. Use generation_id to link related operations
 
 ## Observability
 
-All LLM calls and mapping decisions are traced in Langfuse:
+### Langfuse Features
 
-- View at: http://localhost:3000
-- Search by: `generation_id`
-- Traces show:
-  - Stage 1 LLM decisions (match vs generate)
-  - Stage 2 LLM decisions (match vs generate)
-  - Registry lookups and additions
-  - Variant selection logic
+- **Traces**: See all LLM calls and their hierarchy
+- **Prompts**: Version and track prompts
+- **Scores**: Add quality scores to responses
+- **Datasets**: Create test datasets
+- **Analytics**: Cost, latency, token usage
 
-## Future Enhancements
+### Adding Metadata
 
-See `docs/FUTURE_CONSIDERATIONS.md` for detailed discussion of:
+```python
+langfuse_context.update_current_observation(
+    metadata={
+        "user_id": "user-123",
+        "version": "v2",
+        "custom_field": "value"
+    }
+)
+```
 
-- Confidence scoring and thresholds
-- Human review workflows
-- Registry consolidation and deduplication
-- Embedding-based similarity matching
-- Historical consistency validation
-- Performance optimization (batching, caching)
-- Evaluation metrics and quality tracking
+### Searching Traces
 
-## Design Principles
+Use generation_id to group related operations:
+```python
+generation_id = f"batch_{datetime.now()}"
+for item in items:
+    process(item, generation_id=generation_id)
+```
 
-1. **LLM as Decision Maker**: No confidence thresholds in v1 - LLM decides when to match vs generate
-2. **Auto-Growing Registries**: New objectives and variants added automatically
-3. **Deterministic**: Temperature=0 ensures consistent mappings
-4. **Semantic Focus**: Intent-based matching, not keyword matching
-5. **Simplicity First**: Complex features (consolidation, review workflows) deferred
+Search in Langfuse UI: `metadata.generation_id: batch_20250122`
+
+## Resources
+
+- [OpenAI Structured Outputs Docs](https://platform.openai.com/docs/guides/structured-outputs)
+- [Pydantic Documentation](https://docs.pydantic.dev/)
+- [Langfuse Documentation](https://langfuse.com/docs)
 
 ## License
 
-[Your license here]
+MIT
